@@ -10,6 +10,14 @@
 
 Estimate energyscape and biomass consumption of top predators from allometric relationships.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/CLambert1/energyscapes}
+  \item Report bugs at \url{https://github.com/CLambert1/energyscapes/issues}
+}
+
+}
 \author{
 \strong{Maintainer}: Charlotte Lambert \email{charlotte.lambert@univ-lr.fr} (\href{https://orcid.org/0000-0002-1128-5262}{ORCID})
 

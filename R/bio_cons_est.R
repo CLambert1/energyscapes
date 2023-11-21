@@ -68,11 +68,11 @@ bio_cons_est <- function(predator_group,
   if(isFALSE(c("mean", "sd") %in% names(abundance_map))){
     stop("abundance_map must contain mean and sd columns")
   }
-  if(all(isTRUE(predator_name == "Fish"), 
+  if(all(isTRUE(predator_group == "Fish"), 
          is.null(temperature_map))){
     stop("you must provide a temperature_map when predator_group is 'Fish'")
   }
-  if(all(isTRUE(predator_name == "Fish"), 
+  if(all(isTRUE(predator_group == "Fish"), 
          isFALSE(is.data.frame(temperature_map)))){
     stop("temperature_map must be a dataframe")
   }
@@ -82,7 +82,7 @@ bio_cons_est <- function(predator_group,
   }
   if(all(isTRUE(predator_group %in% c("Cetacean", "Loggerhead turtle")), 
          is.null(beta))){
-    stop("you must provide a beta distribution when predator_group is {predator_group}")
+    stop(glue::glue("you must provide a beta distribution when predator_group is {predator_group}"))
   }
   if(all(isTRUE(predator_group %in% c("Cetacean", "Loggerhead turtle")), 
          isFALSE(is.vector(predator_weight, mode = "numeric")))){
