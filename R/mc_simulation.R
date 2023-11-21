@@ -2,11 +2,12 @@
 
 #' Estimating energyscape and biomass consumption with Monte Carlo simulations
 #'
-#' Function to run the Monte Carlo simulation for energyscape and biomass estimations. This functions runs the \code{\link{bio_cons_est}} function n_sim times, extracts the posterior distributions of each estimated parameter and returns the summarized results. 
+#' Function to run the Monte Carlo simulation for energyscape and biomass estimations. This functions identifies the prey levels as defined by the prey_taxonomic_level, drop any item for which pW or Energy_content is missing, runs the \code{\link{bio_cons_est}} function n_sim times for each item, extracts the posterior distributions of each estimated parameter and returns the summarized results for all levels in prey_taxonomic_level. 
 #'  
 #' @importFrom glue glue
-#' @importFrom dplyr mutate summarize select rename
-#' @importFrom tidyselect contains
+#' @importFrom dplyr mutate summarize select rename pull
+#' @importFrom tidyselect contains any_of
+#' @importFrom tidyr drop_na
 #' @importFrom purrr map
 #' 
 #' @param nsim The number of simulations to run; 1000 by default
@@ -71,6 +72,7 @@ mc_simulation <- function(predator_name,
   }
   
   # extract the prey category in the requested taxonomic level ----
+  diet <- diet |> tidyr::drop_na(tidyselect::any_of(c("pW", "Energy_content", prey_taxonomic_level)))
   levels <- unique(dplyr::pull(diet, prey_taxonomic_level))
   if(length(levels) == 0) {
     stop(glue::glue("No prey categories in {prey_taxonomic_level} for {predator_name}"))

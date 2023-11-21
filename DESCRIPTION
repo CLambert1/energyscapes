@@ -19,6 +19,7 @@ Imports:
     pbapply,
     purrr,
     stats,
+    tidyr,
     tidyselect
 Suggests: 
     knitr,
