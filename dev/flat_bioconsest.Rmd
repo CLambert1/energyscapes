@@ -50,6 +50,8 @@ To estimate the energyscape and prey biomass consumption, we first estimate the 
 #' @return The function returns a list composed of 5 elements: FMR, the energetic needs of a single individuals (kJ/d); Energyscape, the energyscape map for the total predator population (FMR*abundance; kJ/d); daily_ration, the estimated daily ration (in kg); prop_body_mass, the daily ration expressed as proportion of predator body mass; conso_map, a map of the prey_group biomass consumed by the predator population.
 #' 
 #' @importFrom glue glue
+#' @importFrom assertthat assert_that
+#' @importFrom rlang has_name
 #' @importFrom dplyr mutate summarize select rename
 #' @importFrom tidyselect contains
 #' @export
@@ -70,21 +72,12 @@ bio_cons_est <- function(predator_group,
   if(isFALSE(predator_group %in% c("Cetacean", "Fish", "Procellariform", "Charadriform", "Loggerhead turtle"))){
     stop(glue::glue("{predator_group} is not a supported group of predator"))
   }
-  if(isFALSE(is.vector(predator_weight, mode = "numeric"))){
-    stop("predator_weight must be a numeric vector")
-  }
-  if(isFALSE(is.data.frame(diet))){
-    stop("diet must be a dataframe")
-  }
-  if(isFALSE(c("pW", "Energy_content", prey_taxonomic_level) %in% names(diet))){
-    stop(glue::glue("diet must include pW, Energy_content, {prey_taxonomic_level}"))
-  }
-  if(isFALSE(is.data.frame(abundance_map))){
-    stop("abundance_map must be a dataframe")
-  }
-  if(isFALSE(c("mean", "sd") %in% names(abundance_map))){
-    stop("abundance_map must contain mean and sd columns")
-  }
+  assert_that(is.vector(predator_weight, mode = "numeric"))
+  assert_that(is.data.frame(diet))
+  assert_that(diet %has_name% c("pW", "Energy_content", prey_taxonomic_level))
+  assert_that(is.data.frame(abundance_map))
+  assert_that(abundance_map %has_name% c("mean", "sd"))
+  
   if(all(isTRUE(predator_group == "Fish"), 
          is.null(temperature_map))){
     stop("you must provide a temperature_map when predator_group is 'Fish'")
@@ -209,7 +202,34 @@ test_that("bio_cons_est() returns a list",
                temperature_map = sst, # not used for cetaceans and seabirds
                beta = 3),
       "list")
-    )
+    ),
+  expect_error(
+    object = bio_cons_est(predator_group = "Cetacean",
+               predator_name = "TURTRU", 
+               prey_taxonomic_level = "Taxonomic_group", 
+               prey_group = "Cephalopoda",
+               diet = diet, 
+               assimilation_rate = 0.8,
+               n_days = 30+31+31,
+               predator_weight = weight, 
+               abundance_map = species_abundance, 
+               temperature_map = sst, # not used for cetaceans and seabirds
+               beta = NULL),
+    regexp = "you must provide a beta distribution when predator_group is Cetacean"
+  ),
+  expect_error(
+    object = bio_cons_est(predator_group = "Fish",
+               predator_name = "TURTRU", 
+               prey_taxonomic_level = "Taxonomic_group", 
+               prey_group = "Cephalopoda",
+               diet = diet, 
+               assimilation_rate = 0.8,
+               n_days = 30+31+31,
+               predator_weight = weight, 
+               abundance_map = species_abundance, 
+               temperature_map = NULL),
+    regexp = "you must provide a temperature_map when predator_group is 'Fish'"
+  )
 )
 ```
 
@@ -230,6 +250,8 @@ To obtain the final estimations, we embed this function into a Monte Carlo simul
 #' @importFrom tidyselect contains any_of
 #' @importFrom tidyr drop_na
 #' @importFrom purrr map
+#' @importFrom assertthat assert_that
+#' @importFrom rlang has_name
 #' 
 #' @param nsim The number of simulations to run; 1000 by default
 #' @param map_coordinates data.frame containing x and y coordinates of the map
@@ -254,9 +276,7 @@ mc_simulation <- function(predator_name,
                        temperature_map = NULL,
                        nsim = 1000){
   # check map_coords
-  if(isFALSE(all(names(map_coordinates) %in% c("x", "y")))){
-    stop("map_coordinates must include x and y columns")
-  }
+  assert_that(map_coordinates %has_name% c("x", "y"))
   
   # extract the prey category in the requested taxonomic level ----
   diet <- diet |> tidyr::drop_na(tidyselect::any_of(c("pW", "Energy_content", prey_taxonomic_level)))
@@ -614,7 +634,7 @@ ggplot2::ggplot(TURTRU_result$Energyscape) +
 
 
 ```{r tests-mc_simulation}
-test_that("mc_simulation() returns an error when no prey category in provided prey_axonomic_level",
+test_that("mc_simulation() returns an error when no prey category in the provided prey_taxonomic_level",
   expect_error(
     object = mc_simulation(predator_name = "TURTRU", 
                            predator_group = "Cetacean",

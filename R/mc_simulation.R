@@ -9,6 +9,8 @@
 #' @importFrom tidyselect contains any_of
 #' @importFrom tidyr drop_na
 #' @importFrom purrr map
+#' @importFrom assertthat assert_that
+#' @importFrom rlang has_name
 #' 
 #' @param nsim The number of simulations to run; 1000 by default
 #' @param map_coordinates data.frame containing x and y coordinates of the map
@@ -67,9 +69,7 @@ mc_simulation <- function(predator_name,
                        temperature_map = NULL,
                        nsim = 1000){
   # check map_coords
-  if(isFALSE(all(names(map_coordinates) %in% c("x", "y")))){
-    stop("map_coordinates must include x and y columns")
-  }
+  assert_that(map_coordinates %has_name% c("x", "y"))
   
   # extract the prey category in the requested taxonomic level ----
   diet <- diet |> tidyr::drop_na(tidyselect::any_of(c("pW", "Energy_content", prey_taxonomic_level)))

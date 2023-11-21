@@ -15,5 +15,32 @@ test_that("bio_cons_est() returns a list",
                temperature_map = sst, # not used for cetaceans and seabirds
                beta = 3),
       "list")
-    )
+    ),
+  expect_error(
+    object = bio_cons_est(predator_group = "Cetacean",
+               predator_name = "TURTRU", 
+               prey_taxonomic_level = "Taxonomic_group", 
+               prey_group = "Cephalopoda",
+               diet = diet, 
+               assimilation_rate = 0.8,
+               n_days = 30+31+31,
+               predator_weight = weight, 
+               abundance_map = species_abundance, 
+               temperature_map = sst, # not used for cetaceans and seabirds
+               beta = NULL),
+    regexp = "you must provide a beta distribution when predator_group is Cetacean"
+  ),
+  expect_error(
+    object = bio_cons_est(predator_group = "Fish",
+               predator_name = "TURTRU", 
+               prey_taxonomic_level = "Taxonomic_group", 
+               prey_group = "Cephalopoda",
+               diet = diet, 
+               assimilation_rate = 0.8,
+               n_days = 30+31+31,
+               predator_weight = weight, 
+               abundance_map = species_abundance, 
+               temperature_map = NULL),
+    regexp = "you must provide a temperature_map when predator_group is 'Fish'"
+  )
 )

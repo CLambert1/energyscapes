@@ -12,12 +12,14 @@ BugReports: https://github.com/CLambert1/energyscapes/issues
 Depends: 
     R (>= 2.10)
 Imports: 
+    assertthat,
     dplyr,
     ggplot2,
     glue,
     grDevices,
     pbapply,
     purrr,
+    rlang,
     stats,
     tidyr,
     tidyselect

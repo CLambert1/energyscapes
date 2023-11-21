@@ -21,6 +21,8 @@
 #' @return The function returns a list composed of 5 elements: FMR, the energetic needs of a single individuals (kJ/d); Energyscape, the energyscape map for the total predator population (FMR*abundance; kJ/d); daily_ration, the estimated daily ration (in kg); prop_body_mass, the daily ration expressed as proportion of predator body mass; conso_map, a map of the prey_group biomass consumed by the predator population.
 #' 
 #' @importFrom glue glue
+#' @importFrom assertthat assert_that
+#' @importFrom rlang has_name
 #' @importFrom dplyr mutate summarize select rename
 #' @importFrom tidyselect contains
 #' @export
@@ -53,21 +55,12 @@ bio_cons_est <- function(predator_group,
   if(isFALSE(predator_group %in% c("Cetacean", "Fish", "Procellariform", "Charadriform", "Loggerhead turtle"))){
     stop(glue::glue("{predator_group} is not a supported group of predator"))
   }
-  if(isFALSE(is.vector(predator_weight, mode = "numeric"))){
-    stop("predator_weight must be a numeric vector")
-  }
-  if(isFALSE(is.data.frame(diet))){
-    stop("diet must be a dataframe")
-  }
-  if(isFALSE(c("pW", "Energy_content", prey_taxonomic_level) %in% names(diet))){
-    stop(glue::glue("diet must include pW, Energy_content, {prey_taxonomic_level}"))
-  }
-  if(isFALSE(is.data.frame(abundance_map))){
-    stop("abundance_map must be a dataframe")
-  }
-  if(isFALSE(c("mean", "sd") %in% names(abundance_map))){
-    stop("abundance_map must contain mean and sd columns")
-  }
+  assert_that(is.vector(predator_weight, mode = "numeric"))
+  assert_that(is.data.frame(diet))
+  assert_that(diet %has_name% c("pW", "Energy_content", prey_taxonomic_level))
+  assert_that(is.data.frame(abundance_map))
+  assert_that(abundance_map %has_name% c("mean", "sd"))
+  
   if(all(isTRUE(predator_group == "Fish"), 
          is.null(temperature_map))){
     stop("you must provide a temperature_map when predator_group is 'Fish'")
