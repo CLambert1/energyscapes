@@ -1,0 +1,30 @@
+flat_bioconsest.Rmd:
+  path: dev/flat_bioconsest.Rmd
+  state: active
+  R:
+  - R/bio_cons_est.R
+  - R/mc_simulation.R
+  tests:
+  - tests/testthat/test-bio_cons_est.R
+  - tests/testthat/test-mc_simulation.R
+  vignettes: vignettes/energyscape-of-top-predator.Rmd
+  inflate:
+    flat_file: dev/flat_bioconsest.Rmd
+    vignette_name: Energyscape of top predator
+    open_vignette: true
+    check: true
+    document: true
+    overwrite: 'yes'
+flat_ecoscope_palette.Rmd:
+  path: dev/flat_ecoscope_palette.Rmd
+  state: active
+  R: R/ecoscope_pal.R
+  tests: tests/testthat/test-ecoscope_pal.R
+  vignettes: []
+  inflate:
+    flat_file: dev/flat_ecoscope_palette.Rmd
+    vignette_name: .na
+    open_vignette: true
+    check: true
+    document: true
+    overwrite: ask

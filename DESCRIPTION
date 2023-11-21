@@ -1,0 +1,33 @@
+Package: energyscapes
+Title: Toolbox For Energyscape Analyses
+Version: 0.1.0
+Authors@R: 
+    person("Charlotte", "Lambert", , "charlotte.lambert@univ-lr.fr", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-1128-5262"))
+Description: Estimate energyscape and biomass consumption of top predators
+    from allometric relationships.
+License: MIT + file LICENSE
+Depends: 
+    R (>= 2.10)
+Imports: 
+    dplyr,
+    ggplot2,
+    glue,
+    grDevices,
+    pbapply,
+    purrr,
+    stats,
+    tidyselect
+Suggests: 
+    ggthemes,
+    knitr,
+    rmarkdown,
+    testthat,
+    viridis
+VignetteBuilder: 
+    knitr
+Config/fusen/version: 0.5.2
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3

@@ -1,0 +1,9 @@
+url: ~
+template:
+  bootstrap: 5
+  bootswatch: sandstone # lux : beau mais probl avec le titre, overlaped par la navbar ; litera ok; simplex ok
+  theme:  github-light
+navbar:
+  structure:
+    left:  [intro, articles, reference, tutorials, news]
+    right: [search, github]

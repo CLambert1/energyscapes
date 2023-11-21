@@ -1,0 +1,7 @@
+^dev$
+^LICENSE\.md$
+^README\.Rmd$
+^CODE_OF_CONDUCT\.md$
+^data-raw$
+^energyscapes\.Rproj$
+^\.Rproj\.user$

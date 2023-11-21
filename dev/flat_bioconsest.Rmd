@@ -1,0 +1,643 @@
+---
+title: "flat_bioconsest.Rmd for working package"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+<!-- Run this 'development' chunk -->
+<!-- Store every call to library() that you need to explore your functions -->
+
+```{r development, include=FALSE}
+library(testthat)
+library(tidyverse)
+
+data(list = c("diet", "species_abundance", "sst", "weight", "map_coords"))
+
+```
+
+
+```{r development-load}
+# load data from data/ folder
+# data(package = "ecoscope")
+```
+
+
+# Estimate energyscape and biomass consumption
+
+To estimate the energyscape and prey biomass consumption, we first estimate the energyscape (spatialised energetic need of the population) of a marine predator species (either cetacean, seabirds, loggerhead turtles, sunfish, sharks, tunas or swordfish) from its abundance map and body mass distribution, as well as the sea surface temperature (for fish only). Second, we estimate the daily ration consumed for a given prey group by a single predator individual and the corresponding biomass consumed by the total population. This is done with bio_cons_est(), which runs a single estimation, drawing one sample from each provided distribution (body mass, abundance map, SST).
+
+
+```{r function-bio_cons_est}
+
+#' Estimating energyscape and biomass consumption
+#'
+#' The function first estimates the energyscape (spatialised energetic need of the population) of a marine predator species (either cetacean, seabirds, loggerhead turtles, sunfish, sharks, tunas or swordfish) from its abundance map and body mass distribution, as well as the sea surface temperature (for fish only). Second, the function estimate the daily ration consumed for a given prey group by a single predator individual and the corresponding biomass consumed by the total population. Results are provided as maps and vectors. This function runs a single estimation. 
+#' Allometric relationships are derived from White et al. (2011) with beta parameters from Spitz et al. (2012) for cetaceans; from Ultsch et al. 2013 for loggerhead turtle; from Killen et al. (2016) for fishes and from Shaffer et al. (2011) for seabirds (contrasting Procellariforms and Charadriforms). 
+#' 
+#' @param predator_group Character. Predator taxonomic group, used to select the allometric equation used to compute the analysis. Can be "Cetacean", "Fish", "Charadriform", "Procellariform", "Loggerhead turtle"
+#' @param predator_name Character. Name to be used in exported dataframes
+#' @param prey_taxonomic_level Taxonomic level at which the diet is summarize (either "Family", "Taxonomic_group" or "Functional_group", for example), i.e. the column in which prey_group will be subsetted
+#' @param prey_group Which level of the diet to select (one of the levels in the chosen prey_taxonomic_level)
+#' @param diet Diet table, including the considered predator only. Must include pW (proportion of each item in the diet, as proportion of wet weight), Energy_content of the prey item (in kJ/g) and the column provided in prey_taxonomic_group
+#' @param assimilation_rate Assimilation rate to be used to estimate the daily ration (default to 0.8)
+#' @param n_days Number of days over which estimating biomas consumption (default to 1)
+#' @param beta Vector of life cost parameter, used only for mammals
+#' @param predator_weight Vector of body mass distribution for the predator (in kg)
+#' @param abundance_map  Abundance map of the predator (must provide columns named mean and sd)
+#' @param temperature_map SST map (only used for fish; must provide columns named mean and sd)
+#'
+#' @return The function returns a list composed of 5 elements: FMR, the energetic needs of a single individuals (kJ/d); Energyscape, the energyscape map for the total predator population (FMR*abundance; kJ/d); daily_ration, the estimated daily ration (in kg); prop_body_mass, the daily ration expressed as proportion of predator body mass; conso_map, a map of the prey_group biomass consumed by the predator population.
+#' 
+#' @importFrom glue glue
+#' @importFrom dplyr mutate summarize select rename
+#' @importFrom tidyselect contains
+#' @export
+#'
+#' @examples
+bio_cons_est <- function(predator_group,
+                         predator_name,
+                       beta = NULL,
+                       prey_taxonomic_level, 
+                       prey_group, 
+                       diet, 
+                       assimilation_rate = 0.8, 
+                       n_days = 1,
+                       predator_weight, # en kg
+                       abundance_map, 
+                       temperature_map = NULL){
+  # checks ----
+  if(isFALSE(predator_group %in% c("Cetacean", "Fish", "Procellariform", "Charadriform", "Loggerhead turtle"))){
+    stop(glue::glue("{predator_group} is not a supported group of predator"))
+  }
+  if(isFALSE(is.vector(predator_weight, mode = "numeric"))){
+    stop("predator_weight must be a numeric vector")
+  }
+  if(isFALSE(is.data.frame(diet))){
+    stop("diet must be a dataframe")
+  }
+  if(isFALSE(c("pW", "Energy_content", prey_taxonomic_level) %in% names(diet))){
+    stop(glue::glue("diet must include pW, Energy_content, {prey_taxonomic_level}"))
+  }
+  if(isFALSE(is.data.frame(abundance_map))){
+    stop("abundance_map must be a dataframe")
+  }
+  if(isFALSE(c("mean", "sd") %in% names(abundance_map))){
+    stop("abundance_map must contain mean and sd columns")
+  }
+  if(all(isTRUE(predator_name == "Fish"), 
+         is.null(temperature_map))){
+    stop("you must provide a temperature_map when predator_group is 'Fish'")
+  }
+  if(all(isTRUE(predator_name == "Fish"), 
+         isFALSE(is.data.frame(temperature_map)))){
+    stop("temperature_map must be a dataframe")
+  }
+  if(all(isTRUE(predator_group == "Fish"), 
+         isFALSE(c("mean", "sd") %in% names(temperature_map)))){
+    stop("temperature_map must contain mean and sd columns")
+  }
+  if(all(isTRUE(predator_group %in% c("Cetacean", "Loggerhead turtle")), 
+         is.null(beta))){
+    stop("you must provide a beta distribution when predator_group is {predator_group}")
+  }
+  if(all(isTRUE(predator_group %in% c("Cetacean", "Loggerhead turtle")), 
+         isFALSE(is.vector(predator_weight, mode = "numeric")))){
+    stop("beta must be a numeric vector")
+  }
+  #### Sample parameters ----
+  predator_weight <- sample(predator_weight, size = 1)
+  abundance <- as.vector( t( rnorm(n = nrow(abundance_map), 
+                            mean = abundance_map[, "mean"], 
+                            sd = abundance_map[, "sd"]) ))
+  abundance[which(abundance < 0)] <- 0
+  # le rnorm fait un tirage aleatoire sur chaque cellule independamment, donc le resultat n'est pas lisse
+  
+  #### FMR estimation ----
+  if(predator_group == "Cetacean"){
+    beta <- sample(beta, size = 1)
+    BMR <- 4.08*((predator_weight*1000)^0.69) *0.48 # *0.48 to put it from mLO2/h into kJ/d
+    FMR <- beta * BMR
+    energyscape <- FMR * abundance
+  }
+  if(predator_group == "Fish"){
+    temperature <- as.vector( t( rnorm(n = nrow(temperature_map), mean = temperature_map$mean, sd = temperature_map$sd) ))
+    FMR <- 0.563 * ((predator_weight*1000)^0.937) * exp(0.025 * temperature) * 0.48*0.752  # *0.752 to put it from mgO2/h into kJ/d
+    energyscape <- FMR * abundance
+  }
+  if(predator_group == "Procellariform"){
+    FMR <- 23.326*((predator_weight*1000)^0.562)  # Shaffer et al 2011
+    # FMR <- 2.149*((predator_weight*1000)^0.804) *3.9 # Ellis&Gabrielsen 2002 + Garthe et al 1996
+    energyscape <- FMR * abundance
+  }
+  if(predator_group == "Charadriform"){
+    FMR <- 10.181*((predator_weight*1000)^0.717)
+    energyscape <- FMR * abundance
+  }
+  if(predator_group == "Loggerhead turtle"){
+    beta <- sample(beta, size = 1)
+    BMR <- 0.674*((predator_weight*1000))^0.649 * 0.48  # *0.48 to put it from mLO2/h into kJ/d
+    FMR <- beta * BMR
+    energyscape <- FMR * abundance
+  }
+  
+  #### Diet ----
+  diet <- diet |>
+    dplyr::rename(Prey_category = tidyselect::contains(prey_taxonomic_level)) |> 
+    subset(Prey_category == prey_group)
+  
+  diet_compo <- diet |>
+    dplyr::mutate(quality = (pW/100) * Energy_content) |>
+    dplyr::summarize(proportion = sum(pW/100, na.rm = T),
+                     quality = sum(quality, na.rm = T)) |> as.data.frame() |>
+    dplyr::mutate(Predator_key = predator_name)
+
+  
+  #### Biomass consumption ----
+  # ration journaliere (en kg)
+  daily_ration <- ( ( FMR / (assimilation_rate * diet_compo$quality) ) * diet_compo$proportion ) /1000
+  
+  
+  # ration journaliere en proportion du poids corporel
+  prop_body_mass <- (daily_ration / predator_weight)*100
+  
+  # total consumption
+  total_biomass <- daily_ration * abundance * n_days
+  
+  
+  #### Return ----
+  return(list(
+    FMR = FMR,
+    Energyscape = energyscape,
+    daily_ration = daily_ration,
+    prop_body_mass = prop_body_mass,
+    conso_map = total_biomass))
+}
+
+```
+
+
+```{r examples-bio_cons_est}
+result <- bio_cons_est(predator_group = "Cetacean",
+             predator_name = "TURTRU", 
+             prey_taxonomic_level = "Taxonomic_group", 
+             prey_group = "Cephalopoda",
+             diet = diet, 
+             assimilation_rate = 0.8,
+             n_days = 30+31+31,
+             predator_weight = weight, 
+             abundance_map = species_abundance, 
+             temperature_map = sst,
+             beta = beta) # not used for fishes and seabirds
+
+```
+
+
+```{r tests-bio_cons_est}
+test_that("bio_cons_est() returns a list",
+  expect_true(
+    object = inherits(
+      bio_cons_est(predator_group = "Cetacean",
+               predator_name = "TURTRU", 
+               prey_taxonomic_level = "Taxonomic_group", 
+               prey_group = "Cephalopoda",
+               diet = diet, 
+               assimilation_rate = 0.8,
+               n_days = 30+31+31,
+               predator_weight = weight, 
+               abundance_map = species_abundance, 
+               temperature_map = sst, # not used for cetaceans and seabirds
+               beta = 3),
+      "list")
+    )
+)
+```
+
+
+
+# Monte Carlo simulation
+
+To obtain the final estimations, we embed this function into a Monte Carlo simulation which runs it how many times is required to obtain a reliable estimate. This number of simulation is set to 1000 by default but can be changed by the user. 
+
+
+```{r function-mc_simulation}
+#' Estimating energyscape and biomass consumption with Monte Carlo simulations
+#'
+#' Function to run the Monte Carlo simulation for energyscape and biomass estimations. This functions runs the \code{\link{bio_cons_est}} function n_sim times, extracts the posterior distributions of each estimated parameter and returns the summarized results. 
+#'  
+#' @importFrom glue glue
+#' @importFrom dplyr mutate summarize select rename
+#' @importFrom tidyselect contains
+#' @importFrom purrr map
+#' 
+#' @param nsim The number of simulations to run; 1000 by default
+#' @param map_coordinates data.frame containing x and y coordinates of the map
+#' @inheritParams bio_cons_est
+#' 
+#' @return  The function returns a list of 8 elements: FMR_map, the map of FMR (kJ/d); Energyscape_map, the energyscape map (kJ/d; FMR * abundance); DailyRation_map, the map of daily ration (kg); DailyRationPropBM_map, the same but as proportion of body mass; DailyRation, the estimated daily ration averaged over the map (as a table; in kg); DailyRationPropBM, the same as proportion of body mass; Conso_map, the map of total consumed biomass (in kg) and Conso, the consumed biomass summed over the map (in kg). When more than one category exists for a prey_taxonomic_level, maps are returned as tables in a long format (directly usable with facetting in ggplot), except for FMR and Energyscape which return the maps estimated with the first category (for these two elements, the result is the same with any prey_group).
+#' 
+#' 
+#' @export
+#'
+#' @examples
+mc_simulation <- function(predator_name, 
+                          predator_group, 
+                       map_coordinates,
+                       beta,
+                       prey_taxonomic_level, 
+                       diet, 
+                       assimilation_rate, 
+                       n_days,
+                       predator_weight, # en kg
+                       abundance_map, 
+                       temperature_map = NULL,
+                       nsim = 1000){
+  # check map_coords
+  if(isFALSE(all(names(map_coordinates) %in% c("x", "y")))){
+    stop("map_coordinates must include x and y columns")
+  }
+  
+  # extract the prey category in the requested taxonomic level ----
+  levels <- unique(dplyr::pull(diet, prey_taxonomic_level))
+  if(length(levels) == 0) {
+    stop(glue::glue("No prey categories in {prey_taxonomic_level} for {predator_name}"))
+  }
+  if(length(levels) == 1) {
+    # Run the simulation
+    MC_sim <- pbapply::pblapply(1:nsim, function(i){
+      toto <- bio_cons_est(predator_name = predator_name, 
+                           predator_group = predator_group,
+                 prey_taxonomic_level = prey_taxonomic_level, 
+                 prey_group = levels,
+                 diet = diet, 
+                 assimilation_rate = assimilation_rate,
+                 n_days = n_days,
+                 predator_weight = predator_weight, 
+                 abundance_map = abundance_map, 
+                 temperature_map = temperature_map,
+                 beta = beta)
+    })
+  
+    # Extract and format the results
+    ## FMR
+    posterior_FMR <- MC_sim |> 
+      purrr::map(`[[`, "FMR") |> # ou purrr::map(`[[`, 1)
+      do.call(what = "cbind") # a map array for fish, a vector for others
+    
+    smry_FMR_map <- data.frame(
+      x = map_coordinates$x,
+      y = map_coordinates$y,
+      FMR_mean = apply( posterior_FMR, 1, "mean"),
+      FMR_sd = apply( posterior_FMR, 1, "sd"),
+      FMR_L10 = apply( posterior_FMR, 1, function(i){quantile(i, probs = 0.10)}),
+      FMR_U90 = apply( posterior_FMR, 1, function(i){quantile(i, probs = 0.90)}),
+      Prey_category = levels,
+      Predator_key = predator_name
+    )
+    
+    ## Energyscape
+    posterior_Energyscape <- MC_sim |> 
+      purrr::map(`[[`, "Energyscape") |>
+      do.call(what = "cbind") # an map array
+    
+    smry_Energyscape <- data.frame(
+      x = map_coordinates$x,
+      y = map_coordinates$y,
+      Energyscape_mean = apply( posterior_Energyscape, 1, "mean"),
+      Energyscape_sd = apply( posterior_Energyscape, 1, "sd"),
+      Energyscape_L10 = apply( posterior_Energyscape, 1, function(i){quantile(i, probs = 0.10)}),
+      Energyscape_U90 = apply( posterior_Energyscape, 1, function(i){quantile(i, probs = 0.90)}),
+      Prey_category = levels,
+      Predator_key = predator_name
+    )
+    
+    ## Daily ration
+    posterior_Ration <- MC_sim |> 
+      purrr::map(`[[`, "daily_ration") |>
+      do.call(what = "cbind") # a map array for fish, a vector for the others
+    
+    smry_Ration_map <- data.frame(
+      x = map_coordinates$x,
+      y = map_coordinates$y,
+      Ration_mean = apply( posterior_Ration, 1, "mean"),
+      Ration_sd = apply( posterior_Ration, 1, "sd"),
+      Ration_L10 = apply( posterior_Ration, 1, function(i){quantile(i, probs = 0.10)}),
+      Ration_U90 = apply( posterior_Ration, 1, function(i){quantile(i, probs = 0.90)}),
+      Prey_category = levels,
+      Predator_key = predator_name
+    )
+    
+    smry_Ration <- data.frame(
+      mean = mean(smry_Ration_map$Ration_mean),
+      sd = mean(smry_Ration_map$Ration_sd),
+      L10 = quantile(smry_Ration_map$Ration_L10, probs = 0.10),
+      U90 = quantile(smry_Ration_map$Ration_U90, probs = 0.90),
+      Prey_category = levels,
+      Predator_key = predator_name
+    )
+    
+    ## Daily ration prop body mass
+    posterior_RationPropBM <- MC_sim |> 
+      purrr::map(`[[`, "prop_body_mass") |>
+      do.call(what = "cbind")
+    
+    smry_RationPropBM_map <- data.frame(
+      x = map_coordinates$x,
+      y = map_coordinates$y,
+      RationPropBM_mean = apply( posterior_RationPropBM, 1, "mean"),
+      RationPropBM_sd = apply( posterior_RationPropBM, 1, "sd"),
+      RationPropBM_L10 = apply( posterior_RationPropBM, 1, function(i){quantile(i, probs = 0.10)}),
+      RationPropBM_U90 = apply( posterior_RationPropBM, 1, function(i){quantile(i, probs = 0.90)}),
+      Prey_category = levels,
+      Predator_key = predator_name
+    )
+    
+    smry_RationPropBM <- data.frame(
+      mean = mean(smry_RationPropBM_map$RationPropBM_mean),
+      sd = mean(smry_RationPropBM_map$RationPropBM_sd),
+      L10 = quantile(smry_RationPropBM_map$RationPropBM_L10, probs = 0.10),
+      U90 = quantile(smry_RationPropBM_map$RationPropBM_U90, probs = 0.90),
+      Prey_category = levels,
+      Predator_key = predator_name
+    )
+    
+    # ConsoMap
+    posterior_ConsoMap <- MC_sim |> 
+      purrr::map(`[[`, "conso_map") |>
+      do.call(what = "cbind")
+    
+    smry_ConsoMap_map <- data.frame(
+      x = map_coordinates$x,
+      y = map_coordinates$y,
+      ConsoMap_mean = apply( posterior_ConsoMap, 1, "mean"),
+      ConsoMap_sd = apply( posterior_ConsoMap, 1, "sd"),
+      ConsoMap_L10 = apply( posterior_ConsoMap, 1, function(i){quantile(i, probs = 0.10)}),
+      ConsoMap_U90 = apply( posterior_ConsoMap, 1, function(i){quantile(i, probs = 0.90)}),
+      Prey_category = levels,
+      Predator_key = predator_name
+    )
+    
+    smry_ConsoMap <- data.frame(
+      mean = sum(smry_ConsoMap_map$ConsoMap_mean),
+      sd = sum(smry_ConsoMap_map$ConsoMap_sd),
+      L10 = sum(smry_ConsoMap_map$ConsoMap_L10),
+      U90 = sum(smry_ConsoMap_map$ConsoMap_U90),
+      Prey_category = levels,
+      Predator_key = predator_name
+    )
+    
+    # return the result tables
+    return(list(
+      FMR_map = smry_FMR_map, 
+      Energyscape = smry_Energyscape, 
+      DailyRation_map = smry_Ration_map, 
+      DailyRation = smry_Ration, 
+      DailyRationPropBM_map = smry_RationPropBM_map, 
+      DailyRationPropBM = smry_RationPropBM, 
+      Conso_map = smry_ConsoMap_map, 
+      Conso = smry_ConsoMap
+    ))
+  }
+  if(length(levels) > 1){
+    # compute mc_sim for each level separately
+    prey_loop <- lapply(1:length(levels), function(i){
+      message(paste0("Computing ", levels[i], " for ", predator_name))
+      # Run the simulation
+      MC_sim <- pbapply::pblapply(1:nsim, function(j){
+        toto <- bio_cons_est(predator_name = predator_name, 
+                           predator_group = predator_group,
+                 prey_taxonomic_level = prey_taxonomic_level, 
+                 prey_group = levels[i],
+                 diet = diet, 
+                 assimilation_rate = assimilation_rate,
+                 n_days = n_days,
+                 predator_weight = predator_weight, 
+                 abundance_map = abundance_map, 
+                 temperature_map = temperature_map,
+                 beta = beta)
+      })
+    
+      # Extract and format the results ----
+      ## FMR
+      posterior_FMR <- MC_sim |> 
+        purrr::map(`[[`, "FMR") |>
+        do.call(what = "cbind") # a map array for fish, a vector for others
+      
+      smry_FMR_map <- data.frame(
+        x = map_coordinates$x,
+        y = map_coordinates$y,
+        FMR_mean = apply( posterior_FMR, 1, "mean"),
+        FMR_sd = apply( posterior_FMR, 1, "sd"),
+        FMR_L10 = apply( posterior_FMR, 1, function(i){quantile(i, probs = 0.10)}),
+        FMR_U90 = apply( posterior_FMR, 1, function(i){quantile(i, probs = 0.90)})
+      )
+      
+      ## Energyscape
+      posterior_Energyscape <- MC_sim |> 
+        purrr::map(`[[`, "Energyscape") |>
+        do.call(what = "cbind") # a map array
+      
+      smry_Energyscape <- data.frame(
+        x = map_coordinates$x,
+        y = map_coordinates$y,
+        Energyscape_mean = apply( posterior_Energyscape, 1, "mean"),
+        Energyscape_sd = apply( posterior_Energyscape, 1, "sd"),
+        Energyscape_L10 = apply( posterior_Energyscape, 1, function(i){quantile(i, probs = 0.10)}),
+        Energyscape_U90 = apply( posterior_Energyscape, 1, function(i){quantile(i, probs = 0.90)})
+      )
+      
+      ## Daily ration
+      posterior_Ration <- MC_sim |> 
+        purrr::map(`[[`, "daily_ration") |>
+        do.call(what = "cbind") # a map array for fish, a vector for the others
+      
+      smry_Ration_map <- data.frame(
+        x = map_coordinates$x,
+        y = map_coordinates$y,
+        Ration_mean = apply( posterior_Ration, 1, "mean"),
+        Ration_sd = apply( posterior_Ration, 1, "sd"),
+        Ration_L10 = apply( posterior_Ration, 1, function(i){quantile(i, probs = 0.10)}),
+        Ration_U90 = apply( posterior_Ration, 1, function(i){quantile(i, probs = 0.90)}),
+        Prey_category = levels[i],
+        Predator_key = predator_name
+      )
+      
+      smry_Ration <- data.frame(
+        mean = mean(smry_Ration_map$Ration_mean),
+        sd = mean(smry_Ration_map$Ration_sd),
+        L10 = quantile(smry_Ration_map$Ration_L10, probs = 0.10),
+        U90 = quantile(smry_Ration_map$Ration_U90, probs = 0.90),
+        Prey_category = levels[i],
+        Predator_key = predator_name
+      )
+      
+      ## Daily ration prop body mass
+      posterior_RationPropBM <- MC_sim |> 
+        purrr::map(`[[`, "prop_body_mass") |>
+        do.call(what = "cbind")
+      
+      smry_RationPropBM_map <- data.frame(
+        x = map_coordinates$x,
+        y = map_coordinates$y,
+        RationPropBM_mean = apply( posterior_RationPropBM, 1, "mean"),
+        RationPropBM_sd = apply( posterior_RationPropBM, 1, "sd"),
+        RationPropBM_L10 = apply( posterior_RationPropBM, 1, function(i){quantile(i, probs = 0.10)}),
+        RationPropBM_U90 = apply( posterior_RationPropBM, 1, function(i){quantile(i, probs = 0.90)}),
+        Prey_category = levels[i],
+        Predator_key = predator_name
+      )
+      
+      smry_RationPropBM <- data.frame(
+        mean = mean(smry_RationPropBM_map$RationPropBM_mean),
+        sd = mean(smry_RationPropBM_map$RationPropBM_sd),
+        L10 = quantile(smry_RationPropBM_map$RationPropBM_L10, probs = 0.10),
+        U90 = quantile(smry_RationPropBM_map$RationPropBM_U90, probs = 0.90),
+        Prey_category = levels[i],
+        Predator_key = predator_name
+      )
+      
+      # ConsoMap
+      posterior_ConsoMap <- MC_sim |> 
+        purrr::map(`[[`, "conso_map") |>
+        do.call(what = "cbind")
+      
+      smry_ConsoMap_map <- data.frame(
+        x = map_coordinates$x,
+        y = map_coordinates$y,
+        ConsoMap_mean = apply( posterior_ConsoMap, 1, "mean"),
+        ConsoMap_sd = apply( posterior_ConsoMap, 1, "sd"),
+        ConsoMap_L10 = apply( posterior_ConsoMap, 1, function(i){quantile(i, probs = 0.10)}),
+        ConsoMap_U90 = apply( posterior_ConsoMap, 1, function(i){quantile(i, probs = 0.90)}),
+        Prey_category = levels[i],
+        Predator_key = predator_name
+      )
+      
+      smry_ConsoMap <- data.frame(
+        mean = sum(smry_ConsoMap_map$ConsoMap_mean),
+        sd = sum(smry_ConsoMap_map$ConsoMap_sd),
+        L10 = sum(smry_ConsoMap_map$ConsoMap_L10),
+        U90 = sum(smry_ConsoMap_map$ConsoMap_U90),
+        Prey_category = levels[i],
+        Predator_key = predator_name
+      )
+      
+      # return the result tables
+      return(list(
+        FMR_map = smry_FMR_map, 
+        Energyscape_map = smry_Energyscape, 
+        DailyRation_map = smry_Ration_map, 
+        DailyRation = smry_Ration, 
+        DailyRationPropBM_map = smry_RationPropBM_map, 
+        DailyRationPropBM = smry_RationPropBM, 
+        Conso_map = smry_ConsoMap_map, 
+        Conso = smry_ConsoMap
+      ))
+    })
+    
+    message("Wrapping up")
+    # wrapping tables
+    smry_DailyRation <- prey_loop |> 
+        purrr::map(`[[`, "DailyRation") |>
+        do.call(what = "rbind") 
+    smry_DailyRationPropBM <- prey_loop |> 
+        purrr::map(`[[`, "DailyRationPropBM") |>
+        do.call(what = "rbind") 
+    smry_Conso <- prey_loop |> 
+        purrr::map(`[[`, "Conso") |>
+        do.call(what = "rbind") 
+    
+    # wrapping maps
+    smry_FMR_map <- prey_loop[[1]]$FMR_map
+    smry_Energyscape <- prey_loop[[1]]$Energyscape_map 
+    smry_DailyRation_map <- prey_loop |> 
+        purrr::map(`[[`, "DailyRation_map") |>
+        do.call(what = "rbind") 
+    smry_DailyRationPropBM_map <- prey_loop |> 
+        purrr::map(`[[`, "DailyRationPropBM_map") |>
+        do.call(what = "rbind") 
+    smry_Conso_map <- prey_loop |> 
+        purrr::map(`[[`, "Conso_map") |>
+        do.call(what = "rbind") 
+    
+    return(list(
+      FMR_map = smry_FMR_map, 
+      Energyscape = smry_Energyscape, 
+      DailyRation = smry_DailyRation, 
+      DailyRationPropBM = smry_DailyRationPropBM, 
+      Conso = smry_Conso,
+      DailyRation_map = smry_DailyRation_map, 
+      DailyRationPropBM_map = smry_DailyRationPropBM_map, 
+      Conso_map = smry_Conso_map))
+  }
+}
+```
+
+
+```{r examples-mc_simulation}
+# test mc_simulation() with one prey level
+TURTRU_result <- mc_simulation(predator_name = "TURTRU", 
+                               predator_group = "Cetacean",
+             map_coordinates = map_coords,
+             prey_taxonomic_level = "Taxonomic_group", 
+             diet = diet |> subset(Taxonomic_group == "Cephalopoda"), 
+             assimilation_rate = 0.8,
+             n_days = 30+31+31,
+             predator_weight = weight, 
+             abundance_map = species_abundance, 
+             temperature_map = sst, # not used for cetaceans and seabirds
+             beta = beta)
+
+# test mc_simulation() with 2 prey levels
+TURTRU_result <- mc_simulation(predator_name = "TURTRU", 
+                               predator_group = "Cetacean",
+             map_coordinates = map_coords,
+             prey_taxonomic_level = "Taxonomic_group", 
+             diet = diet, 
+             assimilation_rate = 0.8,
+             n_days = 30+31+31,
+             predator_weight = weight, 
+             abundance_map = species_abundance, 
+             temperature_map = sst, # not used for cetaceans and seabirds
+             beta = beta)
+
+# plot results
+ggplot2::ggplot(TURTRU_result$Conso) +
+    ggplot2::geom_pointrange(ggplot2::aes(y = Prey_category, x = mean, xmin = L10, xmax = U90))
+
+ggplot2::ggplot(TURTRU_result$Energyscape) +
+  ggplot2::geom_tile(ggplot2::aes(x = x, y = y, fill = Energyscape_mean))
+
+
+```
+
+
+```{r tests-mc_simulation}
+test_that("mc_simulation() returns an error when no prey category in provided prey_axonomic_level",
+  expect_error(
+    object = mc_simulation(predator_name = "TURTRU", 
+                           predator_group = "Cetacean",
+             map_coordinates = map_coords,
+             prey_taxonomic_level = "Taxonomic_group", 
+             diet = diet |> subset(Taxonomic_group == "Krill"), 
+             assimilation_rate = 0.8,
+             n_days = 30+31+31,
+             predator_weight = weight, 
+             abundance_map = species_abundance, 
+             temperature_map = sst, # not used for cetaceans and seabirds
+             beta = beta),
+    regexp = "No prey categories in Taxonomic_group for TURTRU"
+  )
+)
+```
+
+
+
+
+```{r development-inflate, eval=FALSE}
+# Keep eval=FALSE to avoid infinite loop in case you hit the knit button
+# Execute in the console directly
+fusen::inflate(flat_file = "dev/flat_bioconsest.Rmd", 
+               vignette_name = "Energyscape of top predator",
+               overwrite = TRUE)
+```
+
