@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# ecoscope <img src="man/figures/logo.png" align="right" height="138" />
+# energyscapes <img src="man/figures/logo.png" align="right" height="138" />
 
 <!-- badges: start -->
 <!-- badges: end -->
