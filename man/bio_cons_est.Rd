@@ -42,7 +42,7 @@ bio_cons_est(
 \item{temperature_map}{SST map (only used for fish; must provide columns named mean and sd)}
 }
 \value{
-The function returns a list composed of 5 elements: FMR, the energetic needs of a single individuals (kJ/d); Energyscape, the energyscape map for the total predator population (FMR*abundance; kJ/d); daily_ration, the estimated daily ration (in kg); prop_body_mass, the daily ration expressed as proportion of predator body mass; conso_map, a map of the prey_group biomass consumed by the predator population.
+The function returns a list composed of 6 elements: FMR, the energetic needs of a single individuals (kJ/d); abundance, the abubndance map; Energyscape, the energyscape map for the total predator population, for a single day (FMR*abundance; kJ/d); daily_ration, the estimated daily ration (in kg); prop_body_mass, the daily ration expressed as proportion of predator body mass; conso_map, a map of the prey_group biomass consumed by the predator population over the period provided by n_days.
 }
 \description{
 The function first estimates the energyscape (spatialised energetic need of the population) of a marine predator species (either cetacean, seabirds, loggerhead turtles, sunfish, sharks, tunas or swordfish) from its abundance map and body mass distribution, as well as the sea surface temperature (for fish only). Second, the function estimate the daily ration consumed for a given prey group by a single predator individual and the corresponding biomass consumed by the total population. Results are provided as maps and vectors. This function runs a single estimation.

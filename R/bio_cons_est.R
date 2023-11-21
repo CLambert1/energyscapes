@@ -18,13 +18,13 @@
 #' @param abundance_map  Abundance map of the predator (must provide columns named mean and sd)
 #' @param temperature_map SST map (only used for fish; must provide columns named mean and sd)
 #'
-#' @return The function returns a list composed of 5 elements: FMR, the energetic needs of a single individuals (kJ/d); Energyscape, the energyscape map for the total predator population (FMR*abundance; kJ/d); daily_ration, the estimated daily ration (in kg); prop_body_mass, the daily ration expressed as proportion of predator body mass; conso_map, a map of the prey_group biomass consumed by the predator population.
+#' @return The function returns a list composed of 6 elements: FMR, the energetic needs of a single individuals (kJ/d); abundance, the abubndance map; Energyscape, the energyscape map for the total predator population, for a single day (FMR*abundance; kJ/d); daily_ration, the estimated daily ration (in kg); prop_body_mass, the daily ration expressed as proportion of predator body mass; conso_map, a map of the prey_group biomass consumed by the predator population over the period provided by n_days.
 #' 
 #' @importFrom glue glue
-#' @importFrom assertthat assert_that
-#' @importFrom rlang has_name
+#' @importFrom assertthat assert_that '%has_name%'
 #' @importFrom dplyr mutate summarize select rename
 #' @importFrom tidyselect contains
+#' 
 #' @export
 #'
 #' @examples
@@ -81,6 +81,7 @@ bio_cons_est <- function(predator_group,
          isFALSE(is.vector(predator_weight, mode = "numeric")))){
     stop("beta must be a numeric vector")
   }
+  
   #### Sample parameters ----
   predator_weight <- sample(predator_weight, size = 1)
   abundance <- as.vector( t( rnorm(n = nrow(abundance_map), 
@@ -144,6 +145,7 @@ bio_cons_est <- function(predator_group,
   #### Return ----
   return(list(
     FMR = FMR,
+    abundance = abundance,
     Energyscape = energyscape,
     daily_ration = daily_ration,
     prop_body_mass = prop_body_mass,

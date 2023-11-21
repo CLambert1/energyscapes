@@ -47,13 +47,13 @@ To estimate the energyscape and prey biomass consumption, we first estimate the 
 #' @param abundance_map  Abundance map of the predator (must provide columns named mean and sd)
 #' @param temperature_map SST map (only used for fish; must provide columns named mean and sd)
 #'
-#' @return The function returns a list composed of 5 elements: FMR, the energetic needs of a single individuals (kJ/d); Energyscape, the energyscape map for the total predator population (FMR*abundance; kJ/d); daily_ration, the estimated daily ration (in kg); prop_body_mass, the daily ration expressed as proportion of predator body mass; conso_map, a map of the prey_group biomass consumed by the predator population.
+#' @return The function returns a list composed of 6 elements: FMR, the energetic needs of a single individuals (kJ/d); abundance, the abubndance map; Energyscape, the energyscape map for the total predator population, for a single day (FMR*abundance; kJ/d); daily_ration, the estimated daily ration (in kg); prop_body_mass, the daily ration expressed as proportion of predator body mass; conso_map, a map of the prey_group biomass consumed by the predator population over the period provided by n_days.
 #' 
 #' @importFrom glue glue
-#' @importFrom assertthat assert_that
-#' @importFrom rlang has_name
+#' @importFrom assertthat assert_that '%has_name%'
 #' @importFrom dplyr mutate summarize select rename
 #' @importFrom tidyselect contains
+#' 
 #' @export
 #'
 #' @examples
@@ -98,6 +98,7 @@ bio_cons_est <- function(predator_group,
          isFALSE(is.vector(predator_weight, mode = "numeric")))){
     stop("beta must be a numeric vector")
   }
+  
   #### Sample parameters ----
   predator_weight <- sample(predator_weight, size = 1)
   abundance <- as.vector( t( rnorm(n = nrow(abundance_map), 
@@ -161,6 +162,7 @@ bio_cons_est <- function(predator_group,
   #### Return ----
   return(list(
     FMR = FMR,
+    abundance = abundance,
     Energyscape = energyscape,
     daily_ration = daily_ration,
     prop_body_mass = prop_body_mass,
@@ -187,7 +189,7 @@ result <- bio_cons_est(predator_group = "Cetacean",
 
 
 ```{r tests-bio_cons_est}
-test_that("bio_cons_est() returns a list",
+test_that("bio_cons_est() returns a list", {
   expect_true(
     object = inherits(
       bio_cons_est(predator_group = "Cetacean",
@@ -202,7 +204,8 @@ test_that("bio_cons_est() returns a list",
                temperature_map = sst, # not used for cetaceans and seabirds
                beta = 3),
       "list")
-    ),
+    )
+  
   expect_error(
     object = bio_cons_est(predator_group = "Cetacean",
                predator_name = "TURTRU", 
@@ -216,7 +219,8 @@ test_that("bio_cons_est() returns a list",
                temperature_map = sst, # not used for cetaceans and seabirds
                beta = NULL),
     regexp = "you must provide a beta distribution when predator_group is Cetacean"
-  ),
+  )
+  
   expect_error(
     object = bio_cons_est(predator_group = "Fish",
                predator_name = "TURTRU", 
@@ -230,6 +234,8 @@ test_that("bio_cons_est() returns a list",
                temperature_map = NULL),
     regexp = "you must provide a temperature_map when predator_group is 'Fish'"
   )
+}
+  
 )
 ```
 
@@ -250,14 +256,13 @@ To obtain the final estimations, we embed this function into a Monte Carlo simul
 #' @importFrom tidyselect contains any_of
 #' @importFrom tidyr drop_na
 #' @importFrom purrr map
-#' @importFrom assertthat assert_that
-#' @importFrom rlang has_name
+#' @importFrom assertthat assert_that '%has_name%'
 #' 
 #' @param nsim The number of simulations to run; 1000 by default
 #' @param map_coordinates data.frame containing x and y coordinates of the map
 #' @inheritParams bio_cons_est
 #' 
-#' @return  The function returns a list of 8 elements: FMR_map, the map of FMR (kJ/d); Energyscape_map, the energyscape map (kJ/d; FMR * abundance); DailyRation_map, the map of daily ration (kg); DailyRationPropBM_map, the same but as proportion of body mass; DailyRation, the estimated daily ration averaged over the map (as a table; in kg); DailyRationPropBM, the same as proportion of body mass; Conso_map, the map of total consumed biomass (in kg) and Conso, the consumed biomass summed over the map (in kg). When more than one category exists for a prey_taxonomic_level, maps are returned as tables in a long format (directly usable with facetting in ggplot), except for FMR and Energyscape which return the maps estimated with the first category (for these two elements, the result is the same with any prey_group).
+#' @return  The function returns a list of 8 elements: FMR_map, the map of FMR (kJ/d); Energyscape_map, the energyscape map (kJ/d; FMR * abundance), with the abundance of the species (columns named N_); DailyRation_map, the map of daily ration (kg); DailyRationPropBM_map, the same but as proportion of body mass; DailyRation, the estimated daily ration averaged over the map (as a table; in kg); DailyRationPropBM, the same as proportion of body mass; Conso_map, the map of total consumed biomass (in kg) and Conso, the consumed biomass summed over the map (in kg). When more than one category exists for a prey_taxonomic_level, maps are returned as tables in a long format (directly usable with facetting in ggplot), except for FMR and Energyscape which return the maps estimated with the first category (for these two elements, the result is the same with any prey_group).
 #' 
 #' 
 #' @export
@@ -317,7 +322,11 @@ mc_simulation <- function(predator_name,
       Predator_key = predator_name
     )
     
-    ## Energyscape
+    ## Abundance and energyscapes
+    posterior_ab <- MC_sim |> 
+      purrr::map(`[[`, "abundance") |> # ou purrr::map(`[[`, 1)
+      do.call(what = "cbind") # a map array for fish, a vector for others
+    
     posterior_Energyscape <- MC_sim |> 
       purrr::map(`[[`, "Energyscape") |>
       do.call(what = "cbind") # an map array
@@ -325,6 +334,10 @@ mc_simulation <- function(predator_name,
     smry_Energyscape <- data.frame(
       x = map_coordinates$x,
       y = map_coordinates$y,
+      N_mean = apply( posterior_ab, 1, "mean"),
+      N_sd = apply( posterior_ab, 1, "sd"),
+      N_L10 = apply( posterior_ab, 1, function(i){quantile(i, probs = 0.10)}),
+      N_U90 = apply( posterior_ab, 1, function(i){quantile(i, probs = 0.90)}),
       Energyscape_mean = apply( posterior_Energyscape, 1, "mean"),
       Energyscape_sd = apply( posterior_Energyscape, 1, "sd"),
       Energyscape_L10 = apply( posterior_Energyscape, 1, function(i){quantile(i, probs = 0.10)}),
@@ -454,18 +467,28 @@ mc_simulation <- function(predator_name,
         FMR_U90 = apply( posterior_FMR, 1, function(i){quantile(i, probs = 0.90)})
       )
       
-      ## Energyscape
+      ## Abundance and energyscapes
+      posterior_ab <- MC_sim |> 
+        purrr::map(`[[`, "abundance") |> # ou purrr::map(`[[`, 1)
+        do.call(what = "cbind") # a map array for fish, a vector for others
+      
       posterior_Energyscape <- MC_sim |> 
         purrr::map(`[[`, "Energyscape") |>
-        do.call(what = "cbind") # a map array
+        do.call(what = "cbind") # an map array
       
       smry_Energyscape <- data.frame(
         x = map_coordinates$x,
         y = map_coordinates$y,
+        N_mean = apply( posterior_ab, 1, "mean"),
+        N_sd = apply( posterior_ab, 1, "sd"),
+        N_L10 = apply( posterior_ab, 1, function(i){quantile(i, probs = 0.10)}),
+        N_U90 = apply( posterior_ab, 1, function(i){quantile(i, probs = 0.90)}),
         Energyscape_mean = apply( posterior_Energyscape, 1, "mean"),
         Energyscape_sd = apply( posterior_Energyscape, 1, "sd"),
         Energyscape_L10 = apply( posterior_Energyscape, 1, function(i){quantile(i, probs = 0.10)}),
-        Energyscape_U90 = apply( posterior_Energyscape, 1, function(i){quantile(i, probs = 0.90)})
+        Energyscape_U90 = apply( posterior_Energyscape, 1, function(i){quantile(i, probs = 0.90)}),
+        Prey_category = levels,
+        Predator_key = predator_name
       )
       
       ## Daily ration

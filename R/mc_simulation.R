@@ -9,14 +9,13 @@
 #' @importFrom tidyselect contains any_of
 #' @importFrom tidyr drop_na
 #' @importFrom purrr map
-#' @importFrom assertthat assert_that
-#' @importFrom rlang has_name
+#' @importFrom assertthat assert_that '%has_name%'
 #' 
 #' @param nsim The number of simulations to run; 1000 by default
 #' @param map_coordinates data.frame containing x and y coordinates of the map
 #' @inheritParams bio_cons_est
 #' 
-#' @return  The function returns a list of 8 elements: FMR_map, the map of FMR (kJ/d); Energyscape_map, the energyscape map (kJ/d; FMR * abundance); DailyRation_map, the map of daily ration (kg); DailyRationPropBM_map, the same but as proportion of body mass; DailyRation, the estimated daily ration averaged over the map (as a table; in kg); DailyRationPropBM, the same as proportion of body mass; Conso_map, the map of total consumed biomass (in kg) and Conso, the consumed biomass summed over the map (in kg). When more than one category exists for a prey_taxonomic_level, maps are returned as tables in a long format (directly usable with facetting in ggplot), except for FMR and Energyscape which return the maps estimated with the first category (for these two elements, the result is the same with any prey_group).
+#' @return  The function returns a list of 8 elements: FMR_map, the map of FMR (kJ/d); Energyscape_map, the energyscape map (kJ/d; FMR * abundance), with the abundance of the species (columns named N_); DailyRation_map, the map of daily ration (kg); DailyRationPropBM_map, the same but as proportion of body mass; DailyRation, the estimated daily ration averaged over the map (as a table; in kg); DailyRationPropBM, the same as proportion of body mass; Conso_map, the map of total consumed biomass (in kg) and Conso, the consumed biomass summed over the map (in kg). When more than one category exists for a prey_taxonomic_level, maps are returned as tables in a long format (directly usable with facetting in ggplot), except for FMR and Energyscape which return the maps estimated with the first category (for these two elements, the result is the same with any prey_group).
 #' 
 #' 
 #' @export
@@ -110,7 +109,11 @@ mc_simulation <- function(predator_name,
       Predator_key = predator_name
     )
     
-    ## Energyscape
+    ## Abundance and energyscapes
+    posterior_ab <- MC_sim |> 
+      purrr::map(`[[`, "abundance") |> # ou purrr::map(`[[`, 1)
+      do.call(what = "cbind") # a map array for fish, a vector for others
+    
     posterior_Energyscape <- MC_sim |> 
       purrr::map(`[[`, "Energyscape") |>
       do.call(what = "cbind") # an map array
@@ -118,6 +121,10 @@ mc_simulation <- function(predator_name,
     smry_Energyscape <- data.frame(
       x = map_coordinates$x,
       y = map_coordinates$y,
+      N_mean = apply( posterior_ab, 1, "mean"),
+      N_sd = apply( posterior_ab, 1, "sd"),
+      N_L10 = apply( posterior_ab, 1, function(i){quantile(i, probs = 0.10)}),
+      N_U90 = apply( posterior_ab, 1, function(i){quantile(i, probs = 0.90)}),
       Energyscape_mean = apply( posterior_Energyscape, 1, "mean"),
       Energyscape_sd = apply( posterior_Energyscape, 1, "sd"),
       Energyscape_L10 = apply( posterior_Energyscape, 1, function(i){quantile(i, probs = 0.10)}),
@@ -247,18 +254,28 @@ mc_simulation <- function(predator_name,
         FMR_U90 = apply( posterior_FMR, 1, function(i){quantile(i, probs = 0.90)})
       )
       
-      ## Energyscape
+      ## Abundance and energyscapes
+      posterior_ab <- MC_sim |> 
+        purrr::map(`[[`, "abundance") |> # ou purrr::map(`[[`, 1)
+        do.call(what = "cbind") # a map array for fish, a vector for others
+      
       posterior_Energyscape <- MC_sim |> 
         purrr::map(`[[`, "Energyscape") |>
-        do.call(what = "cbind") # a map array
+        do.call(what = "cbind") # an map array
       
       smry_Energyscape <- data.frame(
         x = map_coordinates$x,
         y = map_coordinates$y,
+        N_mean = apply( posterior_ab, 1, "mean"),
+        N_sd = apply( posterior_ab, 1, "sd"),
+        N_L10 = apply( posterior_ab, 1, function(i){quantile(i, probs = 0.10)}),
+        N_U90 = apply( posterior_ab, 1, function(i){quantile(i, probs = 0.90)}),
         Energyscape_mean = apply( posterior_Energyscape, 1, "mean"),
         Energyscape_sd = apply( posterior_Energyscape, 1, "sd"),
         Energyscape_L10 = apply( posterior_Energyscape, 1, function(i){quantile(i, probs = 0.10)}),
-        Energyscape_U90 = apply( posterior_Energyscape, 1, function(i){quantile(i, probs = 0.90)})
+        Energyscape_U90 = apply( posterior_Energyscape, 1, function(i){quantile(i, probs = 0.90)}),
+        Prey_category = levels,
+        Predator_key = predator_name
       )
       
       ## Daily ration
