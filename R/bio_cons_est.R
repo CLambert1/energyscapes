@@ -69,6 +69,10 @@ bio_cons_est <- function(predator_group,
          isFALSE(is.data.frame(temperature_map)))){
     stop("temperature_map must be a dataframe")
   }
+  if(all(isTRUE(predator_group == "Fish"),
+         isFALSE(nrow(abundance_map) == nrow(temperature_map)))){
+    stop("abundance_map and temperature_map must have the same length")
+  }
   if(all(isTRUE(predator_group == "Fish"), 
          isFALSE(c("mean", "sd") %in% names(temperature_map)))){
     stop("temperature_map must contain mean and sd columns")
@@ -78,7 +82,7 @@ bio_cons_est <- function(predator_group,
     stop(glue::glue("you must provide a beta distribution when predator_group is {predator_group}"))
   }
   if(all(isTRUE(predator_group %in% c("Cetacean", "Loggerhead turtle")), 
-         isFALSE(is.vector(predator_weight, mode = "numeric")))){
+         isFALSE(is.vector(beta, mode = "numeric")))){
     stop("beta must be a numeric vector")
   }
   
@@ -98,7 +102,9 @@ bio_cons_est <- function(predator_group,
     energyscape <- FMR * abundance
   }
   if(predator_group == "Fish"){
-    temperature <- as.vector( t( rnorm(n = nrow(temperature_map), mean = temperature_map$mean, sd = temperature_map$sd) ))
+    temperature <- as.vector( t( rnorm(n = nrow(temperature_map), 
+                                       mean = temperature_map$mean, 
+                                       sd = temperature_map$sd) ))
     FMR <- 0.563 * ((predator_weight*1000)^0.937) * exp(0.025 * temperature) * 0.48*0.752  # *0.752 to put it from mgO2/h into kJ/d
     energyscape <- FMR * abundance
   }

@@ -18,8 +18,7 @@ data(list = c("diet", "species_abundance", "sst", "weight", "map_coords"))
 
 
 ```{r development-load}
-# load data from data/ folder
-# data(package = "ecoscope")
+pkgload::load_all()
 ```
 
 
@@ -86,6 +85,10 @@ bio_cons_est <- function(predator_group,
          isFALSE(is.data.frame(temperature_map)))){
     stop("temperature_map must be a dataframe")
   }
+  if(all(isTRUE(predator_group == "Fish"),
+         isFALSE(nrow(abundance_map) == nrow(temperature_map)))){
+    stop("abundance_map and temperature_map must have the same length")
+  }
   if(all(isTRUE(predator_group == "Fish"), 
          isFALSE(c("mean", "sd") %in% names(temperature_map)))){
     stop("temperature_map must contain mean and sd columns")
@@ -95,7 +98,7 @@ bio_cons_est <- function(predator_group,
     stop(glue::glue("you must provide a beta distribution when predator_group is {predator_group}"))
   }
   if(all(isTRUE(predator_group %in% c("Cetacean", "Loggerhead turtle")), 
-         isFALSE(is.vector(predator_weight, mode = "numeric")))){
+         isFALSE(is.vector(beta, mode = "numeric")))){
     stop("beta must be a numeric vector")
   }
   
@@ -115,7 +118,9 @@ bio_cons_est <- function(predator_group,
     energyscape <- FMR * abundance
   }
   if(predator_group == "Fish"){
-    temperature <- as.vector( t( rnorm(n = nrow(temperature_map), mean = temperature_map$mean, sd = temperature_map$sd) ))
+    temperature <- as.vector( t( rnorm(n = nrow(temperature_map), 
+                                       mean = temperature_map$mean, 
+                                       sd = temperature_map$sd) ))
     FMR <- 0.563 * ((predator_weight*1000)^0.937) * exp(0.025 * temperature) * 0.48*0.752  # *0.752 to put it from mgO2/h into kJ/d
     energyscape <- FMR * abundance
   }
@@ -487,7 +492,7 @@ mc_simulation <- function(predator_name,
         Energyscape_sd = apply( posterior_Energyscape, 1, "sd"),
         Energyscape_L10 = apply( posterior_Energyscape, 1, function(i){quantile(i, probs = 0.10)}),
         Energyscape_U90 = apply( posterior_Energyscape, 1, function(i){quantile(i, probs = 0.90)}),
-        Prey_category = levels,
+        Prey_category = levels[i],
         Predator_key = predator_name
       )
       
@@ -668,7 +673,7 @@ test_that("mc_simulation() returns an error when no prey category in the provide
              n_days = 30+31+31,
              predator_weight = weight, 
              abundance_map = species_abundance, 
-             temperature_map = sst, # not used for cetaceans and seabirds
+             temperature_map = NULL, # not used for cetaceans and seabirds
              beta = beta),
     regexp = "No prey categories in Taxonomic_group for TURTRU"
   )

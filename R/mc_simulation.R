@@ -274,7 +274,7 @@ mc_simulation <- function(predator_name,
         Energyscape_sd = apply( posterior_Energyscape, 1, "sd"),
         Energyscape_L10 = apply( posterior_Energyscape, 1, function(i){quantile(i, probs = 0.10)}),
         Energyscape_U90 = apply( posterior_Energyscape, 1, function(i){quantile(i, probs = 0.90)}),
-        Prey_category = levels,
+        Prey_category = levels[i],
         Predator_key = predator_name
       )
       
