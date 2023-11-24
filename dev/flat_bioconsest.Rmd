@@ -135,7 +135,7 @@ bio_cons_est <- function(predator_group,
   }
   if(predator_group == "Loggerhead turtle"){
     beta <- sample(beta, size = 1)
-    BMR <- 0.674*((predator_weight*1000))^0.649 * 0.48  # *0.48 to put it from mLO2/h into kJ/d
+    BMR <- 0.674*((predator_weight*1000)^0.649) * 0.48  # *0.48 to put it from mLO2/h into kJ/d
     FMR <- beta * BMR
     energyscape <- FMR * abundance
   }
