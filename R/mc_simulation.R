@@ -2,10 +2,10 @@
 
 #' Estimating energyscape and biomass consumption with Monte Carlo simulations
 #'
-#' Function to run the Monte Carlo simulation for energyscape and biomass estimations. This functions identifies the prey levels as defined by the prey_taxonomic_level, drop any item for which pW or Energy_content is missing, runs the \code{\link{bio_cons_est}} function n_sim times for each item, extracts the posterior distributions of each estimated parameter and returns the summarized results for all levels in prey_taxonomic_level. The function also provides a facility to estimate biomass consumption only for depth accessible to the predator: this is done by switching `mask_bathy` to yes, which will put to zero all predator abundance at depth larger than the provided `diving_depth`, but only for the prey groups specified in `groups_to_mask`. This may be useful when some prey groups (e.g. benthic species) are only accessible in some areas (e.g. continental shelf). 
+#' Function to run the Monte Carlo simulation for energyscape and biomass estimations. This functions identifies the prey levels as defined by the prey_taxonomic_level, drop any item for which pW or Energy_content is missing, runs the \code{\link{bio_cons_est}} function n_sim times for each item, extracts the posterior distributions of each estimated parameter and returns the summarized results for all levels in prey_taxonomic_level. 
 #'  
 #' @importFrom glue glue
-#' @importFrom dplyr mutate summarize select rename pull case_when
+#' @importFrom dplyr mutate summarize select rename pull
 #' @importFrom tidyselect contains any_of
 #' @importFrom tidyr drop_na
 #' @importFrom purrr map
@@ -13,10 +13,6 @@
 #' 
 #' @param nsim The number of simulations to run; 1000 by default
 #' @param map_coordinates data.frame containing x and y coordinates of the map
-#' @param mask_bathy character. "yes" or "no" (default). If yes, the abundance layer will be masked based on diving depth of the predator before estimating the biomass consumpion for prey groups provided in `groups_to_mask`. 
-#' @param bathy_col character. The name of the column in `abundance_map` where bathymetry information is stored. Used only if `mask_bathy == yes`.
-#' @param diving_depth numeric. Diving depth of the predator (provided as positive number). Used only if `mask_bathy == yes`. 
-#' @param groups_to_mask character vector. A vector containing the prey groups (as found in `diet`) for which the masking must be done. Used only if `mask_bathy == yes`.
 #' @inheritParams bio_cons_est
 #' 
 #' @return  The function returns a list of 8 elements: FMR_map, the map of FMR (kJ/d); Energyscape_map, the energyscape map (kJ/d; FMR * abundance), with the abundance of the species (columns named N_); DailyRation_map, the map of daily ration (kg); DailyRationPropBM_map, the same but as proportion of body mass; DailyRation, the estimated daily ration averaged over the map (as a table; in kg); DailyRationPropBM, the same as proportion of body mass; Conso_map, the map of total consumed biomass (in kg) and Conso, the consumed biomass summed over the map (in kg). When more than one category exists for a prey_taxonomic_level, maps are returned as tables in a long format (directly usable with facetting in ggplot), except for FMR and Energyscape which return the maps estimated with the first category (for these two elements, the result is the same with any prey_group).
