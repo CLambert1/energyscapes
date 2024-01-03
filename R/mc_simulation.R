@@ -2,10 +2,10 @@
 
 #' Estimating energyscape and biomass consumption with Monte Carlo simulations
 #'
-#' Function to run the Monte Carlo simulation for energyscape and biomass estimations. This functions identifies the prey levels as defined by the prey_taxonomic_level, drop any item for which pW or Energy_content is missing, runs the \code{\link{bio_cons_est}} function n_sim times for each item, extracts the posterior distributions of each estimated parameter and returns the summarized results for all levels in prey_taxonomic_level. 
+#' Function to run the Monte Carlo simulation for energyscape and biomass estimations. This functions identifies the prey levels as defined by the prey_taxonomic_level, drop any item for which pW or Energy_content is missing, runs the \code{\link{bio_cons_est}} function n_sim times for each item, extracts the posterior distributions of each estimated parameter and returns the summarized results for all levels in prey_taxonomic_level. The function also provides a facility to estimate biomass consumption only for depth accessible to the predator: this is done by switching `mask_bathy` to yes, which will put to zero all predator abundance at depth larger than the provided `diving_depth`, but only for the prey groups specified in `groups_to_mask`. This may be useful when some prey groups (e.g. benthic species) are only accessible in some areas (e.g. continental shelf). 
 #'  
 #' @importFrom glue glue
-#' @importFrom dplyr mutate summarize select rename pull
+#' @importFrom dplyr mutate summarize select rename pull case_when
 #' @importFrom tidyselect contains any_of
 #' @importFrom tidyr drop_na
 #' @importFrom purrr map
@@ -13,6 +13,10 @@
 #' 
 #' @param nsim The number of simulations to run; 1000 by default
 #' @param map_coordinates data.frame containing x and y coordinates of the map
+#' @param mask_bathy character. "yes" or "no" (default). If yes, the abundance layer will be masked based on diving depth of the predator before estimating the biomass consumpion for prey groups provided in `groups_to_mask`. 
+#' @param bathy_col character. The name of the column in `abundance_map` where bathymetry information is stored. Used only if `mask_bathy == yes`.
+#' @param diving_depth numeric. Diving depth of the predator (provided as positive number). Used only if `mask_bathy == yes`. 
+#' @param groups_to_mask character vector. A vector containing the prey groups (as found in `diet`) for which the masking must be done. Used only if `mask_bathy == yes`.
 #' @inheritParams bio_cons_est
 #' 
 #' @return  The function returns a list of 8 elements: FMR_map, the map of FMR (kJ/d); Energyscape_map, the energyscape map (kJ/d; FMR * abundance), with the abundance of the species (columns named N_); DailyRation_map, the map of daily ration (kg); DailyRationPropBM_map, the same but as proportion of body mass; DailyRation, the estimated daily ration averaged over the map (as a table; in kg); DailyRationPropBM, the same as proportion of body mass; Conso_map, the map of total consumed biomass (in kg) and Conso, the consumed biomass summed over the map (in kg). When more than one category exists for a prey_taxonomic_level, maps are returned as tables in a long format (directly usable with facetting in ggplot), except for FMR and Energyscape which return the maps estimated with the first category (for these two elements, the result is the same with any prey_group).
@@ -66,9 +70,20 @@ mc_simulation <- function(predator_name,
                        predator_weight, # en kg
                        abundance_map, 
                        temperature_map = NULL,
-                       nsim = 1000){
+                       nsim = 1000,
+                       mask_bathy = "no",
+                       bathy_col = NULL,
+                       groups_to_mask = NULL,
+                       diving_depth = NULL){
   # check map_coords
   assert_that(map_coordinates %has_name% c("x", "y"))
+  if(mask_bathy == "yes" & any(is.null(bathy_col), is.null(groups_to_mask), is.null(diving_depth))){
+    stop("If mask_bathy == yes, bathy_col, groups_to_mask and diving_depth must all be provided")
+  }
+  if(mask_bathy == "yes" & isFALSE(all( groups_to_mask %in% (diet |> dplyr::pull(prey_taxonomic_level))))){
+    stop(glue("Not all groups in groups_to_mask are present in {prey_taxonomic_level} in {diet}"))
+  }
+  if(mask_bathy == "yes" & isFALSE(length(diving_depth) == 1)) { stop("diving_depth must be of length 1") }
   
   # extract the prey category in the requested taxonomic level ----
   diet <- diet |> tidyr::drop_na(tidyselect::any_of(c("pW", "Energy_content", prey_taxonomic_level)))
@@ -79,6 +94,13 @@ mc_simulation <- function(predator_name,
   if(length(levels) == 1) {
     # Run the simulation
     MC_sim <- pbapply::pblapply(1:nsim, function(i){
+      if(mask_bathy == "yes" & 
+         levels %in% groups_to_mask){
+        abundance_map <- abundance_map |> dplyr::mutate(
+          mean = dplyr::case_when( .data[[bathy_col]] < (-diving_depth) ~ 0, TRUE ~ mean ),
+          sd = dplyr::case_when( .data[[bathy_col]] < (-diving_depth) ~ 0, TRUE ~ sd )
+          )
+      }
       toto <- bio_cons_est(predator_name = predator_name, 
                            predator_group = predator_group,
                  prey_taxonomic_level = prey_taxonomic_level, 
@@ -224,6 +246,15 @@ mc_simulation <- function(predator_name,
     # compute mc_sim for each level separately
     prey_loop <- lapply(1:length(levels), function(i){
       message(paste0("Computing ", levels[i], " for ", predator_name))
+      # check if musk mask on diving depth for this level
+      if(mask_bathy == "yes" & 
+         levels[i] %in% groups_to_mask){
+        abundance_map <- abundance_map |> dplyr::mutate(
+          mean = dplyr::case_when( .data[[bathy_col]] < (-diving_depth) ~ 0, TRUE ~ mean ),
+          sd = dplyr::case_when( .data[[bathy_col]] < (-diving_depth) ~ 0, TRUE ~ sd )
+          )
+      }
+      
       # Run the simulation
       MC_sim <- pbapply::pblapply(1:nsim, function(j){
         toto <- bio_cons_est(predator_name = predator_name, 

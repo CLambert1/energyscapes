@@ -16,7 +16,11 @@ mc_simulation(
   predator_weight,
   abundance_map,
   temperature_map = NULL,
-  nsim = 1000
+  nsim = 1000,
+  mask_bathy = "no",
+  bathy_col = NULL,
+  groups_to_mask = NULL,
+  diving_depth = NULL
 )
 }
 \arguments{
@@ -43,12 +47,20 @@ mc_simulation(
 \item{temperature_map}{SST map (only used for fish; must provide columns named mean and sd)}
 
 \item{nsim}{The number of simulations to run; 1000 by default}
+
+\item{mask_bathy}{character. "yes" or "no" (default). If yes, the abundance layer will be masked based on diving depth of the predator before estimating the biomass consumpion for prey groups provided in \code{groups_to_mask}.}
+
+\item{bathy_col}{character. The name of the column in \code{abundance_map} where bathymetry information is stored. Used only if \code{mask_bathy == yes}.}
+
+\item{groups_to_mask}{character vector. A vector containing the prey groups (as found in \code{diet}) for which the masking must be done. Used only if \code{mask_bathy == yes}.}
+
+\item{diving_depth}{numeric. Diving depth of the predator (provided as positive number). Used only if \code{mask_bathy == yes}.}
 }
 \value{
 The function returns a list of 8 elements: FMR_map, the map of FMR (kJ/d); Energyscape_map, the energyscape map (kJ/d; FMR * abundance), with the abundance of the species (columns named N_); DailyRation_map, the map of daily ration (kg); DailyRationPropBM_map, the same but as proportion of body mass; DailyRation, the estimated daily ration averaged over the map (as a table; in kg); DailyRationPropBM, the same as proportion of body mass; Conso_map, the map of total consumed biomass (in kg) and Conso, the consumed biomass summed over the map (in kg). When more than one category exists for a prey_taxonomic_level, maps are returned as tables in a long format (directly usable with facetting in ggplot), except for FMR and Energyscape which return the maps estimated with the first category (for these two elements, the result is the same with any prey_group).
 }
 \description{
-Function to run the Monte Carlo simulation for energyscape and biomass estimations. This functions identifies the prey levels as defined by the prey_taxonomic_level, drop any item for which pW or Energy_content is missing, runs the \code{\link{bio_cons_est}} function n_sim times for each item, extracts the posterior distributions of each estimated parameter and returns the summarized results for all levels in prey_taxonomic_level.
+Function to run the Monte Carlo simulation for energyscape and biomass estimations. This functions identifies the prey levels as defined by the prey_taxonomic_level, drop any item for which pW or Energy_content is missing, runs the \code{\link{bio_cons_est}} function n_sim times for each item, extracts the posterior distributions of each estimated parameter and returns the summarized results for all levels in prey_taxonomic_level. The function also provides a facility to estimate biomass consumption only for depth accessible to the predator: this is done by switching \code{mask_bathy} to yes, which will put to zero all predator abundance at depth larger than the provided \code{diving_depth}, but only for the prey groups specified in \code{groups_to_mask}. This may be useful when some prey groups (e.g. benthic species) are only accessible in some areas (e.g. continental shelf).
 }
 \examples{
 # test mc_simulation() with one prey level

@@ -11,6 +11,7 @@ A data frame with 5720 rows and 4 variables:
 \item{ y }{  numeric }
 \item{ mean }{  numeric }
 \item{ sd }{  numeric }
+\item{ bathy }{ numeric }
 }
 }
 \source{
