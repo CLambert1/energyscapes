@@ -469,7 +469,9 @@ mc_simulation <- function(predator_name,
         FMR_mean = apply( posterior_FMR, 1, "mean"),
         FMR_sd = apply( posterior_FMR, 1, "sd"),
         FMR_L10 = apply( posterior_FMR, 1, function(i){quantile(i, probs = 0.10)}),
-        FMR_U90 = apply( posterior_FMR, 1, function(i){quantile(i, probs = 0.90)})
+        FMR_U90 = apply( posterior_FMR, 1, function(i){quantile(i, probs = 0.90)}),
+        Prey_category = levels[i],
+        Predator_key = predator_name
       )
       
       ## Abundance and energyscapes
