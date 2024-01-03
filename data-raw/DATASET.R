@@ -8,7 +8,9 @@ work_dir <- "~/ECOSCOPE/ANALYSES/4_EnergyScapes/GRAGRI"
 # GRAGRI_raw <- rast(paste0(maps_dir, "/ASI_pred_GRAGRI.tif"))
 sp_table <- read.table("~/ECOSCOPE/ANALYSES/0_Maps_formatting/Predator_table.csv", sep = ";", dec = ".", h = T)
 
-species_abundance <- data.frame(x = sp_table$x, y = sp_table$y, mean = sp_table$TURTRU_Mean, sd = sp_table$TURTRU_sd)
+species_abundance <- data.frame(x = sp_table$x, y = sp_table$y,
+                                mean = sp_table$TURTRU_Mean, sd = sp_table$TURTRU_sd,
+                                bathy = sp_table$Bathy)
 map_coords <- species_abundance[,c(1:2)]
 
 ### 3 - Temp maps

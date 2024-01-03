@@ -8,6 +8,7 @@
 #'   \item{ y }{  numeric }
 #'   \item{ mean }{  numeric }
 #'   \item{ sd }{  numeric }
+#'   \item{ bathy }{ numeric }
 #' }
 #' @source Source
 "species_abundance"
