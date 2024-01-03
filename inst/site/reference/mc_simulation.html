@@ -72,11 +72,7 @@
 <span>  <span class="va">predator_weight</span>,</span>
 <span>  <span class="va">abundance_map</span>,</span>
 <span>  temperature_map <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  nsim <span class="op">=</span> <span class="fl">1000</span>,</span>
-<span>  mask_bathy <span class="op">=</span> <span class="st">"no"</span>,</span>
-<span>  bathy_col <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  groups_to_mask <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  diving_depth <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  nsim <span class="op">=</span> <span class="fl">1000</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -138,12 +134,12 @@
 <dd><p>character. The name of the column in <code>abundance_map</code> where bathymetry information is stored. Used only if <code>mask_bathy == yes</code>.</p></dd>
 
 
-<dt>groups_to_mask</dt>
-<dd><p>character vector. A vector containing the prey groups (as found in <code>diet</code>) for which the masking must be done. Used only if <code>mask_bathy == yes</code>.</p></dd>
-
-
 <dt>diving_depth</dt>
 <dd><p>numeric. Diving depth of the predator (provided as positive number). Used only if <code>mask_bathy == yes</code>.</p></dd>
+
+
+<dt>groups_to_mask</dt>
+<dd><p>character vector. A vector containing the prey groups (as found in <code>diet</code>) for which the masking must be done. Used only if <code>mask_bathy == yes</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">

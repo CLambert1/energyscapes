@@ -16,11 +16,7 @@ mc_simulation(
   predator_weight,
   abundance_map,
   temperature_map = NULL,
-  nsim = 1000,
-  mask_bathy = "no",
-  bathy_col = NULL,
-  groups_to_mask = NULL,
-  diving_depth = NULL
+  nsim = 1000
 )
 }
 \arguments{
@@ -52,9 +48,9 @@ mc_simulation(
 
 \item{bathy_col}{character. The name of the column in \code{abundance_map} where bathymetry information is stored. Used only if \code{mask_bathy == yes}.}
 
-\item{groups_to_mask}{character vector. A vector containing the prey groups (as found in \code{diet}) for which the masking must be done. Used only if \code{mask_bathy == yes}.}
-
 \item{diving_depth}{numeric. Diving depth of the predator (provided as positive number). Used only if \code{mask_bathy == yes}.}
+
+\item{groups_to_mask}{character vector. A vector containing the prey groups (as found in \code{diet}) for which the masking must be done. Used only if \code{mask_bathy == yes}.}
 }
 \value{
 The function returns a list of 8 elements: FMR_map, the map of FMR (kJ/d); Energyscape_map, the energyscape map (kJ/d; FMR * abundance), with the abundance of the species (columns named N_); DailyRation_map, the map of daily ration (kg); DailyRationPropBM_map, the same but as proportion of body mass; DailyRation, the estimated daily ration averaged over the map (as a table; in kg); DailyRationPropBM, the same as proportion of body mass; Conso_map, the map of total consumed biomass (in kg) and Conso, the consumed biomass summed over the map (in kg). When more than one category exists for a prey_taxonomic_level, maps are returned as tables in a long format (directly usable with facetting in ggplot), except for FMR and Energyscape which return the maps estimated with the first category (for these two elements, the result is the same with any prey_group).
