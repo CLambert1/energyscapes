@@ -45,7 +45,7 @@ str(diet) # see ?diet for the detail about table structure
 
 ## Run the analysis
 
-From these data, we use the main function of the package (`mc_simulation`) to run the Monte Carlo simulations and estimate the energyscape and biomass consumptions:
+From these data, we use the main function of the package (`mc_simulation()`) to run the Monte Carlo simulations and estimate the energyscape and biomass consumptions:
 
 ```{r mc_simulation}
 # test mc_simulation() with 2 prey levels

@@ -26,7 +26,7 @@ library(energyscapes)
 
 # Estimate energyscape and biomass consumption
 
-To estimate the energyscape and prey biomass consumption, we first estimate the energyscape (spatialised energetic need of the population) of a marine predator species (either cetacean, seabirds, loggerhead turtles, sunfish, sharks, tunas or swordfish) from its abundance map and body mass distribution, as well as the sea surface temperature (for fish only). Second, we estimate the daily ration consumed for a given prey group by a single predator individual and the corresponding biomass consumed by the total population. This is done with bio_cons_est(), which runs a single estimation, drawing one sample from each provided distribution (body mass, abundance map, SST).
+To estimate the energyscape and prey biomass consumption, we first estimate the energyscape (spatialised energetic need of the population) of a marine predator species (either cetacean, seabirds, loggerhead turtles, sunfish, sharks, tunas or swordfish) from its abundance map and body mass distribution, as well as the sea surface temperature (for fish only). Second, we estimate the daily ration consumed for a given prey group by a single predator individual and the corresponding biomass consumed by the total population. This is done with `bio_cons_est()`, which runs a single estimation, drawing one sample from each provided distribution (body mass, abundance map, SST).
 
 
 

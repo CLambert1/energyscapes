@@ -12,7 +12,7 @@ flat_bioconsest.Rmd:
     flat_file: dev/flat_bioconsest.Rmd
     vignette_name: Energyscape of top predator
     open_vignette: true
-    check: true
+    check: false
     document: true
     overwrite: 'yes'
 flat_ecoscope_palette.Rmd:
