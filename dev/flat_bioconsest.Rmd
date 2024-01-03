@@ -341,10 +341,10 @@ mc_simulation <- function(predator_name,
     smry_FMR_map <- data.frame(
       x = map_coordinates$x,
       y = map_coordinates$y,
-      FMR_mean = apply( posterior_FMR, 1, "mean"),
-      FMR_sd = apply( posterior_FMR, 1, "sd"),
-      FMR_L10 = apply( posterior_FMR, 1, function(i){quantile(i, probs = 0.10)}),
-      FMR_U90 = apply( posterior_FMR, 1, function(i){quantile(i, probs = 0.90)}),
+      FMR_mean = apply( posterior_FMR, 1, "mean", na.rm = T),
+      FMR_sd = apply( posterior_FMR, 1, "sd", na.rm = T),
+      FMR_L10 = apply( posterior_FMR, 1, function(i){quantile(i, probs = 0.10, na.rm = T)}),
+      FMR_U90 = apply( posterior_FMR, 1, function(i){quantile(i, probs = 0.90, na.rm = T)}),
       Prey_category = levels,
       Predator_key = predator_name
     )
@@ -361,14 +361,14 @@ mc_simulation <- function(predator_name,
     smry_Energyscape <- data.frame(
       x = map_coordinates$x,
       y = map_coordinates$y,
-      N_mean = apply( posterior_ab, 1, "mean"),
-      N_sd = apply( posterior_ab, 1, "sd"),
-      N_L10 = apply( posterior_ab, 1, function(i){quantile(i, probs = 0.10)}),
-      N_U90 = apply( posterior_ab, 1, function(i){quantile(i, probs = 0.90)}),
-      Energyscape_mean = apply( posterior_Energyscape, 1, "mean"),
-      Energyscape_sd = apply( posterior_Energyscape, 1, "sd"),
-      Energyscape_L10 = apply( posterior_Energyscape, 1, function(i){quantile(i, probs = 0.10)}),
-      Energyscape_U90 = apply( posterior_Energyscape, 1, function(i){quantile(i, probs = 0.90)}),
+      N_mean = apply( posterior_ab, 1, "mean", na.rm = T),
+      N_sd = apply( posterior_ab, 1, "sd", na.rm = T),
+      N_L10 = apply( posterior_ab, 1, function(i){quantile(i, probs = 0.10, na.rm = T)}),
+      N_U90 = apply( posterior_ab, 1, function(i){quantile(i, probs = 0.90, na.rm = T)}),
+      Energyscape_mean = apply( posterior_Energyscape, 1, "mean", na.rm = T),
+      Energyscape_sd = apply( posterior_Energyscape, 1, "sd", na.rm = T),
+      Energyscape_L10 = apply( posterior_Energyscape, 1, function(i){quantile(i, probs = 0.10, na.rm = T)}),
+      Energyscape_U90 = apply( posterior_Energyscape, 1, function(i){quantile(i, probs = 0.90, na.rm = T)}),
       Prey_category = levels,
       Predator_key = predator_name
     )
@@ -381,19 +381,19 @@ mc_simulation <- function(predator_name,
     smry_Ration_map <- data.frame(
       x = map_coordinates$x,
       y = map_coordinates$y,
-      Ration_mean = apply( posterior_Ration, 1, "mean"),
-      Ration_sd = apply( posterior_Ration, 1, "sd"),
-      Ration_L10 = apply( posterior_Ration, 1, function(i){quantile(i, probs = 0.10)}),
-      Ration_U90 = apply( posterior_Ration, 1, function(i){quantile(i, probs = 0.90)}),
+      Ration_mean = apply( posterior_Ration, 1, "mean", na.rm = T),
+      Ration_sd = apply( posterior_Ration, 1, "sd", na.rm = T),
+      Ration_L10 = apply( posterior_Ration, 1, function(i){quantile(i, probs = 0.10, na.rm = T)}),
+      Ration_U90 = apply( posterior_Ration, 1, function(i){quantile(i, probs = 0.90, na.rm = T)}),
       Prey_category = levels,
       Predator_key = predator_name
     )
     
     smry_Ration <- data.frame(
-      mean = mean(smry_Ration_map$Ration_mean),
-      sd = mean(smry_Ration_map$Ration_sd),
-      L10 = quantile(smry_Ration_map$Ration_L10, probs = 0.10),
-      U90 = quantile(smry_Ration_map$Ration_U90, probs = 0.90),
+      mean = mean(smry_Ration_map$Ration_mean, na.rm = T),
+      sd = mean(smry_Ration_map$Ration_sd, na.rm = T),
+      L10 = quantile(smry_Ration_map$Ration_L10, probs = 0.10, na.rm = T),
+      U90 = quantile(smry_Ration_map$Ration_U90, probs = 0.90, na.rm = T),
       Prey_category = levels,
       Predator_key = predator_name
     )
@@ -406,19 +406,19 @@ mc_simulation <- function(predator_name,
     smry_RationPropBM_map <- data.frame(
       x = map_coordinates$x,
       y = map_coordinates$y,
-      RationPropBM_mean = apply( posterior_RationPropBM, 1, "mean"),
-      RationPropBM_sd = apply( posterior_RationPropBM, 1, "sd"),
-      RationPropBM_L10 = apply( posterior_RationPropBM, 1, function(i){quantile(i, probs = 0.10)}),
-      RationPropBM_U90 = apply( posterior_RationPropBM, 1, function(i){quantile(i, probs = 0.90)}),
+      RationPropBM_mean = apply( posterior_RationPropBM, 1, "mean", na.rm = T),
+      RationPropBM_sd = apply( posterior_RationPropBM, 1, "sd", na.rm = T),
+      RationPropBM_L10 = apply( posterior_RationPropBM, 1, function(i){quantile(i, probs = 0.10, na.rm = T)}),
+      RationPropBM_U90 = apply( posterior_RationPropBM, 1, function(i){quantile(i, probs = 0.90, na.rm = T)}),
       Prey_category = levels,
       Predator_key = predator_name
     )
     
     smry_RationPropBM <- data.frame(
-      mean = mean(smry_RationPropBM_map$RationPropBM_mean),
-      sd = mean(smry_RationPropBM_map$RationPropBM_sd),
-      L10 = quantile(smry_RationPropBM_map$RationPropBM_L10, probs = 0.10),
-      U90 = quantile(smry_RationPropBM_map$RationPropBM_U90, probs = 0.90),
+      mean = mean(smry_RationPropBM_map$RationPropBM_mean, na.rm = T),
+      sd = mean(smry_RationPropBM_map$RationPropBM_sd, na.rm = T),
+      L10 = quantile(smry_RationPropBM_map$RationPropBM_L10, probs = 0.10, na.rm = T),
+      U90 = quantile(smry_RationPropBM_map$RationPropBM_U90, probs = 0.90, na.rm = T),
       Prey_category = levels,
       Predator_key = predator_name
     )
@@ -431,10 +431,10 @@ mc_simulation <- function(predator_name,
     smry_ConsoMap_map <- data.frame(
       x = map_coordinates$x,
       y = map_coordinates$y,
-      ConsoMap_mean = apply( posterior_ConsoMap, 1, "mean"),
-      ConsoMap_sd = apply( posterior_ConsoMap, 1, "sd"),
-      ConsoMap_L10 = apply( posterior_ConsoMap, 1, function(i){quantile(i, probs = 0.10)}),
-      ConsoMap_U90 = apply( posterior_ConsoMap, 1, function(i){quantile(i, probs = 0.90)}),
+      ConsoMap_mean = apply( posterior_ConsoMap, 1, "mean", na.rm = T),
+      ConsoMap_sd = apply( posterior_ConsoMap, 1, "sd", na.rm = T),
+      ConsoMap_L10 = apply( posterior_ConsoMap, 1, function(i){quantile(i, probs = 0.10, na.rm = T)}),
+      ConsoMap_U90 = apply( posterior_ConsoMap, 1, function(i){quantile(i, probs = 0.90, na.rm = T)}),
       Prey_category = levels,
       Predator_key = predator_name
     )
@@ -497,10 +497,10 @@ mc_simulation <- function(predator_name,
       smry_FMR_map <- data.frame(
         x = map_coordinates$x,
         y = map_coordinates$y,
-        FMR_mean = apply( posterior_FMR, 1, "mean"),
-        FMR_sd = apply( posterior_FMR, 1, "sd"),
-        FMR_L10 = apply( posterior_FMR, 1, function(i){quantile(i, probs = 0.10)}),
-        FMR_U90 = apply( posterior_FMR, 1, function(i){quantile(i, probs = 0.90)})
+        FMR_mean = apply( posterior_FMR, 1, "mean", na.rm = T),
+        FMR_sd = apply( posterior_FMR, 1, "sd", na.rm = T),
+        FMR_L10 = apply( posterior_FMR, 1, function(i){quantile(i, probs = 0.10, na.rm = T)}),
+        FMR_U90 = apply( posterior_FMR, 1, function(i){quantile(i, probs = 0.90, na.rm = T)})
       )
       
       ## Abundance and energyscapes
@@ -515,14 +515,14 @@ mc_simulation <- function(predator_name,
       smry_Energyscape <- data.frame(
         x = map_coordinates$x,
         y = map_coordinates$y,
-        N_mean = apply( posterior_ab, 1, "mean"),
-        N_sd = apply( posterior_ab, 1, "sd"),
-        N_L10 = apply( posterior_ab, 1, function(i){quantile(i, probs = 0.10)}),
-        N_U90 = apply( posterior_ab, 1, function(i){quantile(i, probs = 0.90)}),
-        Energyscape_mean = apply( posterior_Energyscape, 1, "mean"),
-        Energyscape_sd = apply( posterior_Energyscape, 1, "sd"),
-        Energyscape_L10 = apply( posterior_Energyscape, 1, function(i){quantile(i, probs = 0.10)}),
-        Energyscape_U90 = apply( posterior_Energyscape, 1, function(i){quantile(i, probs = 0.90)}),
+        N_mean = apply( posterior_ab, 1, "mean", na.rm = T),
+        N_sd = apply( posterior_ab, 1, "sd", na.rm = T),
+        N_L10 = apply( posterior_ab, 1, function(i){quantile(i, probs = 0.10, na.rm = T)}),
+        N_U90 = apply( posterior_ab, 1, function(i){quantile(i, probs = 0.90, na.rm = T)}),
+        Energyscape_mean = apply( posterior_Energyscape, 1, "mean", na.rm = T),
+        Energyscape_sd = apply( posterior_Energyscape, 1, "sd", na.rm = T),
+        Energyscape_L10 = apply( posterior_Energyscape, 1, function(i){quantile(i, probs = 0.10, na.rm = T)}),
+        Energyscape_U90 = apply( posterior_Energyscape, 1, function(i){quantile(i, probs = 0.90, na.rm = T)}),
         Prey_category = levels[i],
         Predator_key = predator_name
       )
@@ -535,19 +535,19 @@ mc_simulation <- function(predator_name,
       smry_Ration_map <- data.frame(
         x = map_coordinates$x,
         y = map_coordinates$y,
-        Ration_mean = apply( posterior_Ration, 1, "mean"),
-        Ration_sd = apply( posterior_Ration, 1, "sd"),
-        Ration_L10 = apply( posterior_Ration, 1, function(i){quantile(i, probs = 0.10)}),
-        Ration_U90 = apply( posterior_Ration, 1, function(i){quantile(i, probs = 0.90)}),
+        Ration_mean = apply( posterior_Ration, 1, "mean", na.rm = T),
+        Ration_sd = apply( posterior_Ration, 1, "sd", na.rm = T),
+        Ration_L10 = apply( posterior_Ration, 1, function(i){quantile(i, probs = 0.10, na.rm = T)}),
+        Ration_U90 = apply( posterior_Ration, 1, function(i){quantile(i, probs = 0.90, na.rm = T)}),
         Prey_category = levels[i],
         Predator_key = predator_name
       )
       
       smry_Ration <- data.frame(
-        mean = mean(smry_Ration_map$Ration_mean),
-        sd = mean(smry_Ration_map$Ration_sd),
-        L10 = quantile(smry_Ration_map$Ration_L10, probs = 0.10),
-        U90 = quantile(smry_Ration_map$Ration_U90, probs = 0.90),
+        mean = mean(smry_Ration_map$Ration_mean, na.rm = T),
+        sd = mean(smry_Ration_map$Ration_sd, na.rm = T),
+        L10 = quantile(smry_Ration_map$Ration_L10, probs = 0.10, na.rm = T),
+        U90 = quantile(smry_Ration_map$Ration_U90, probs = 0.90, na.rm = T),
         Prey_category = levels[i],
         Predator_key = predator_name
       )
@@ -560,19 +560,19 @@ mc_simulation <- function(predator_name,
       smry_RationPropBM_map <- data.frame(
         x = map_coordinates$x,
         y = map_coordinates$y,
-        RationPropBM_mean = apply( posterior_RationPropBM, 1, "mean"),
-        RationPropBM_sd = apply( posterior_RationPropBM, 1, "sd"),
-        RationPropBM_L10 = apply( posterior_RationPropBM, 1, function(i){quantile(i, probs = 0.10)}),
-        RationPropBM_U90 = apply( posterior_RationPropBM, 1, function(i){quantile(i, probs = 0.90)}),
+        RationPropBM_mean = apply( posterior_RationPropBM, 1, "mean", na.rm = T),
+        RationPropBM_sd = apply( posterior_RationPropBM, 1, "sd", na.rm = T),
+        RationPropBM_L10 = apply( posterior_RationPropBM, 1, function(i){quantile(i, probs = 0.10, na.rm = T)}),
+        RationPropBM_U90 = apply( posterior_RationPropBM, 1, function(i){quantile(i, probs = 0.90, na.rm = T)}),
         Prey_category = levels[i],
         Predator_key = predator_name
       )
       
       smry_RationPropBM <- data.frame(
-        mean = mean(smry_RationPropBM_map$RationPropBM_mean),
-        sd = mean(smry_RationPropBM_map$RationPropBM_sd),
-        L10 = quantile(smry_RationPropBM_map$RationPropBM_L10, probs = 0.10),
-        U90 = quantile(smry_RationPropBM_map$RationPropBM_U90, probs = 0.90),
+        mean = mean(smry_RationPropBM_map$RationPropBM_mean, na.rm = T),
+        sd = mean(smry_RationPropBM_map$RationPropBM_sd, na.rm = T),
+        L10 = quantile(smry_RationPropBM_map$RationPropBM_L10, probs = 0.10, na.rm = T),
+        U90 = quantile(smry_RationPropBM_map$RationPropBM_U90, probs = 0.90, na.rm = T),
         Prey_category = levels[i],
         Predator_key = predator_name
       )
@@ -585,10 +585,10 @@ mc_simulation <- function(predator_name,
       smry_ConsoMap_map <- data.frame(
         x = map_coordinates$x,
         y = map_coordinates$y,
-        ConsoMap_mean = apply( posterior_ConsoMap, 1, "mean"),
-        ConsoMap_sd = apply( posterior_ConsoMap, 1, "sd"),
-        ConsoMap_L10 = apply( posterior_ConsoMap, 1, function(i){quantile(i, probs = 0.10)}),
-        ConsoMap_U90 = apply( posterior_ConsoMap, 1, function(i){quantile(i, probs = 0.90)}),
+        ConsoMap_mean = apply( posterior_ConsoMap, 1, "mean", na.rm = T),
+        ConsoMap_sd = apply( posterior_ConsoMap, 1, "sd", na.rm = T),
+        ConsoMap_L10 = apply( posterior_ConsoMap, 1, function(i){quantile(i, probs = 0.10, na.rm = T)}),
+        ConsoMap_U90 = apply( posterior_ConsoMap, 1, function(i){quantile(i, probs = 0.90, na.rm = T)}),
         Prey_category = levels[i],
         Predator_key = predator_name
       )
