@@ -5,10 +5,8 @@
 #' @export
 ecoscope_palette <- list(
   `ecoscope1` = c("black","#89a3ab", "#8bcde6", "#21647d", "#3859ea", "#28a1d2", "#28ccd3",
-                  "#98cb48", "#7f8e53", "#b6bbaf", "#8b7454", "#ece8dc", "#cdba9b", "#c3703a",
-                  "#ea985c", "#fd655b", "#cc3118", "#8f0405", "#8e375a", "#aa34a7", "#e01edb", "#781576")
+                  "#98cb48", "#7f8e53", "#89917F", "#756144", "#B3AB95", "#ea985c", "#fd655b", "#cc3118", "#8f0405", "#8e375a", "#aa34a7", "#e01edb", "#781576")
 )
-
 
 #' Function to interpolate a color palette
 #'

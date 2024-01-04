@@ -25,6 +25,6 @@ flat_ecoscope_palette.Rmd:
     flat_file: dev/flat_ecoscope_palette.Rmd
     vignette_name: .na
     open_vignette: true
-    check: true
+    check: false
     document: true
     overwrite: ask

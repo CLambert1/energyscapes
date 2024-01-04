@@ -12,6 +12,11 @@ library(testthat)
 ```{r development-load}
 # Load already included functions if relevant
 pkgload::load_all(export_all = FALSE)
+
+c("#5D694E", "#574428", "#A3862D")
+c("#89917F", "#756144", "#B3AB95")
+
+
 ```
 
 # Ecoscope custom color palette
@@ -24,10 +29,8 @@ Create a custom color palette to be used for plotting results from the above fun
 #' @export
 ecoscope_palette <- list(
   `ecoscope1` = c("black","#89a3ab", "#8bcde6", "#21647d", "#3859ea", "#28a1d2", "#28ccd3",
-                  "#98cb48", "#7f8e53", "#b6bbaf", "#8b7454", "#ece8dc", "#cdba9b", "#c3703a",
-                  "#ea985c", "#fd655b", "#cc3118", "#8f0405", "#8e375a", "#aa34a7", "#e01edb", "#781576")
+                  "#98cb48", "#7f8e53", "#89917F", "#756144", "#B3AB95", "#ea985c", "#fd655b", "#cc3118", "#8f0405", "#8e375a", "#aa34a7", "#e01edb", "#781576")
 )
-
 
 #' Function to interpolate a color palette
 #'
@@ -103,6 +106,6 @@ test_that("scale_color_ecoscope works", {
 ```{r development-inflate, eval=FALSE}
 # Run but keep eval=FALSE to avoid infinite loop
 # Execute in the console directly
-fusen::inflate(flat_file = "dev/flat_ecoscope_palette.Rmd", vignette_name = NA) # will not generate a vignette
+fusen::inflate(flat_file = "dev/flat_ecoscope_palette.Rmd", vignette_name = NA, check = FALSE) # will not generate a vignette and not do the checks
 ```
 
