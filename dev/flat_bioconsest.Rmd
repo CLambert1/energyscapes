@@ -145,7 +145,8 @@ bio_cons_est <- function(predator_group,
     dplyr::rename(Prey_category = tidyselect::contains(prey_taxonomic_level)) |> 
     subset(Prey_category == prey_group)
   
-  diet_compo <- diet |>
+  diet_compo <- diet |> 
+    as.data.frame() |>
     dplyr::mutate(quality = (pW/100) * Energy_content) |>
     dplyr::summarize(proportion = sum(pW/100, na.rm = T),
                      quality = sum(quality, na.rm = T)) |> as.data.frame() |>
