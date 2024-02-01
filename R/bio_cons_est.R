@@ -97,7 +97,8 @@ bio_cons_est <- function(predator_group,
   #### FMR estimation ----
   if(predator_group == "Cetacean"){
     beta <- sample(beta, size = 1)
-    BMR <- 4.08*((predator_weight*1000)^0.69) *0.48 # *0.48 to put it from mLO2/h into kJ/d
+    # BMR <- 4.08*((predator_weight*1000)^0.69) *0.48 # *0.48 to put it from mLO2/h into kJ/d # WHITE
+    BMR <- 293.1*((predator_weight)^0.75)  # KLEIBER
     FMR <- beta * BMR
     energyscape <- FMR * abundance
   }
@@ -125,21 +126,24 @@ bio_cons_est <- function(predator_group,
   }
   
   #### Diet ----
-  diet <- diet |>
-    dplyr::rename(Prey_category = tidyselect::contains(prey_taxonomic_level)) |> 
-    subset(Prey_category == prey_group)
-  
-  diet_compo <- diet |> 
+  sum_pw_e <- diet |> 
     as.data.frame() |>
     dplyr::mutate(quality = (pW/100) * Energy_content) |>
-    dplyr::summarize(proportion = sum(pW/100, na.rm = T),
-                     quality = sum(quality, na.rm = T)) |> as.data.frame() |>
+    dplyr::summarize(quality = sum(quality, na.rm = T)) |> as.data.frame() |>
+    dplyr::mutate(Predator_key = predator_name)
+    
+  diet_compo <- diet |>
+    dplyr::rename(Prey_category = tidyselect::contains(prey_taxonomic_level)) |> 
+    subset(Prey_category == prey_group) |> 
+    as.data.frame() |>
+    dplyr::summarize(proportion = sum(pW/100, na.rm = T)) |> as.data.frame() |>
     dplyr::mutate(Predator_key = predator_name)
 
   
   #### Biomass consumption ----
   # ration journaliere (en kg)
-  daily_ration <- ( ( FMR / (assimilation_rate * diet_compo$quality) ) * diet_compo$proportion ) /1000
+  daily_ration_total <- ( ( FMR / (assimilation_rate * sum_pw_e$quality) )  ) /1000
+  daily_ration <- daily_ration_total * diet_compo$proportion
   
   
   # ration journaliere en proportion du poids corporel
