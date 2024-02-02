@@ -142,8 +142,7 @@ bio_cons_est <- function(predator_group,
   
   #### Biomass consumption ----
   # ration journaliere (en kg)
-  daily_ration_total <- ( ( FMR / (assimilation_rate * sum_pw_e$quality) )  ) /1000
-  daily_ration <- daily_ration_total * diet_compo$proportion
+  daily_ration <- ( ( FMR / (assimilation_rate * sum_pw_e$quality) )  * diet_compo$proportion ) /1000
   
   
   # ration journaliere en proportion du poids corporel
