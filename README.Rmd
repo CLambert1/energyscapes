@@ -29,7 +29,7 @@ This package was developed in the framework of the [European Horizon 2020 Progra
 You can install the development version of energyscapes with:
 
 ``` {r install}
-# devtools::install_github("CLambert1/energyscapes") # not yet 
+# devtools::install_github("CLambert1/energyscapes")
 ```
 
 

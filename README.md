@@ -24,7 +24,7 @@ grant agreement number 101000302.
 You can install the development version of energyscapes with:
 
 ``` r
-# devtools::install_github("CLambert1/energyscapes") # not yet 
+# devtools::install_github("CLambert1/energyscapes")
 ```
 
 ## Code of Conduct
