@@ -161,6 +161,9 @@ devtools::build_readme()
 # usethis::create_github_token()
 # gitcreds::gitcreds_set()
 fusen::init_share_on_github()
+
+# Set Continuous Integration
+usethis::use_github_action("pkgdown") # déployement en ligne du site sur une Github page via GutHub Action 
 ```
 
 
