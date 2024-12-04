@@ -12,7 +12,7 @@ editor_options:
 library(testthat)
 library(tidyverse)
 
-data(list = c("diet", "species_abundance", "sst", "weight", "map_coords", "beta"))
+data(list = c("diet", "species_abundance", "sst", "weight", "map_coords"))
 
 ```
 
@@ -182,17 +182,16 @@ bio_cons_est <- function(predator_group,
 
 
 ```{r examples-bio_cons_est}
-result <- bio_cons_est(predator_group = "Cetacean",
-             predator_name = "TURTRU", 
+result <- bio_cons_est(predator_group = "Procellariform",
+             predator_name = "CALDIO", 
              prey_taxonomic_level = "Taxonomic_group", 
-             prey_group = "Cephalopoda",
+             prey_group = "Teleost",
              diet = diet, 
              assimilation_rate = 0.8,
              n_days = 30+31+31,
              predator_weight = weight, 
              abundance_map = species_abundance, 
-             temperature_map = sst,
-             beta = beta) # not used for fishes and seabirds
+             temperature_map = sst)
 
 ```
 
@@ -631,21 +630,20 @@ mc_simulation <- function(predator_name,
 
 ```{r examples-mc_simulation}
 # test mc_simulation() with one prey level
-TURTRU_result <- mc_simulation(predator_name = "TURTRU", 
-                               predator_group = "Cetacean",
+CALDIO_result <- mc_simulation(predator_name = "CALDIO", 
+                               predator_group = "Procellariform",
              map_coordinates = map_coords,
              prey_taxonomic_level = "Taxonomic_group", 
-             diet = diet |> subset(Taxonomic_group == "Cephalopoda"), 
+             diet = diet |> subset(Taxonomic_group == "Teleost"), 
              assimilation_rate = 0.8,
              n_days = 30+31+31,
              predator_weight = weight, 
              abundance_map = species_abundance, 
-             temperature_map = sst, # not used for cetaceans and seabirds
-             beta = beta)
+             temperature_map = sst)
 
 # test mc_simulation() with 2 prey levels
-TURTRU_result <- mc_simulation(predator_name = "TURTRU", 
-                               predator_group = "Cetacean",
+CALDIO_result <- mc_simulation(predator_name = "CALDIO", 
+                               predator_group = "Procellariform",
              map_coordinates = map_coords,
              prey_taxonomic_level = "Taxonomic_group", 
              diet = diet, 
@@ -653,14 +651,13 @@ TURTRU_result <- mc_simulation(predator_name = "TURTRU",
              n_days = 30+31+31,
              predator_weight = weight, 
              abundance_map = species_abundance, 
-             temperature_map = sst, # not used for cetaceans and seabirds
-             beta = beta)
+             temperature_map = sst)
 
 # plot results
-ggplot2::ggplot(TURTRU_result$Conso) +
+ggplot2::ggplot(CALDIO_result$Conso) +
     ggplot2::geom_pointrange(ggplot2::aes(y = Prey_category, x = mean, xmin = L10, xmax = U90))
 
-ggplot2::ggplot(TURTRU_result$Energyscape) +
+ggplot2::ggplot(CALDIO_result$Energyscape) +
   ggplot2::geom_tile(ggplot2::aes(x = x, y = y, fill = Energyscape_mean))
 
 
@@ -679,8 +676,7 @@ test_that("mc_simulation() returns an error when no prey category in the provide
              n_days = 30+31+31,
              predator_weight = weight, 
              abundance_map = species_abundance, 
-             temperature_map = NULL, # not used for cetaceans and seabirds
-             beta = beta),
+             temperature_map = NULL),
     regexp = "No prey categories in Taxonomic_group for TURTRU"
   )
 )

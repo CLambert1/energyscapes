@@ -2,14 +2,13 @@ library(tidyverse)
 ### 1 - Retrieve original data -------------------------------------------------
 maps_dir <- "~/ECOSCOPE/ANALYSES/0_Maps_formatting"
 func_dir <- "~/ECOSCOPE/ANALYSES/4_EnergyScapes"
-work_dir <- "~/ECOSCOPE/ANALYSES/4_EnergyScapes/GRAGRI"
+work_dir <- "~/ECOSCOPE/ANALYSES/4_EnergyScapes/CALDIO"
 
 ### 1 - Predator maps
-# GRAGRI_raw <- rast(paste0(maps_dir, "/ASI_pred_GRAGRI.tif"))
 sp_table <- read.table("~/ECOSCOPE/ANALYSES/0_Maps_formatting/Predator_table.csv", sep = ";", dec = ".", h = T)
 
 species_abundance <- data.frame(x = sp_table$x, y = sp_table$y,
-                                mean = sp_table$TURTRU_Mean, sd = sp_table$TURTRU_sd,
+                                mean = sp_table$CALDIO_AIJ_Mean, sd = sp_table$CALDIO_AIJ_sd,
                                 bathy = sp_table$Bathy)
 map_coords <- species_abundance[,c(1:2)]
 
@@ -21,20 +20,17 @@ sst <- data.frame(x = sst_mean$x, y = sst_mean$y, mean = sst_mean$SST, sd = sst_
 
 
 ### 4 - Open diet data
-diet <- readxl::read_excel(paste(func_dir, "Diet.xlsx", sep = "/"), sheet = "Diet_composition")
-energ <- readxl::read_excel(paste(func_dir, "Diet.xlsx", sep = "/"), sheet = "Energy_content")
+diet <- readxl::read_excel("~/ECOSCOPE/PUBLICATIONS/papers/Energyscapes/data/Diet.xlsx", sheet = "Diet_composition") |> rename(Source_diet = Source)
+energ <- readxl::read_excel("~/ECOSCOPE/PUBLICATIONS/papers/Energyscapes/data/Diet.xlsx", sheet = "Energy_content") |> rename(Source_energy_content = Source)
 
-diet <- left_join(diet, energ, "Latin_name") %>% subset(Predator_key == "TURTRU")
+diet <- left_join(diet, energ, "Latin_name") %>% subset(Predator_key == "CALDIO")
 
 
 ### 7 - Construct weight
-weight <- sn::rsn(n = 500, xi = 300, omega = 150, alpha = -1.9)
-weight <- weight[-(which(weight < 50))]
+weight <- rnorm(n = 1000, mean = 0.611, sd = 0.06)
 
-
-### 8 - Construct weight
+### 8 - Construct beta
 beta <- truncnorm::rtruncnorm(n = 500, mean = 3, sd = 0.2*2, a = 1, b = 5)
-
 
 ### 9 - Copy to data/
 usethis::use_data(diet, overwrite = TRUE)
@@ -60,8 +56,6 @@ rstudioapi::navigateToFile("R/doc_weight.R")
 checkhelper::use_data_doc("map_coords")
 rstudioapi::navigateToFile("R/doc_map_coords.R")
 
-checkhelper::use_data_doc("beta")
-rstudioapi::navigateToFile("R/doc_beta.R")
 
 attachment::att_amend_desc() # do it each time changes anything in the R file (and reinstall)
 

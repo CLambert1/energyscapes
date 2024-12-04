@@ -169,7 +169,7 @@ fusen::init_share_on_github()
 
 ```{r}
 devtools::build(vignettes = TRUE) # construit le package au format tar.gz
-remotes::install_local(path = "~/energyscapes_0.1.0.tar.gz") # installe le package depuis le format tar.gz
+remotes::install_local(path = "~/CODE_DEV/energyscapes_0.1.0.tar.gz") # installe le package depuis le format tar.gz
 ```
 
 # gestion des globalVariables

@@ -18,6 +18,6 @@ Source
 map_coords
 }
 \description{
-Description.
+Coordinates of the map.
 }
 \keyword{datasets}

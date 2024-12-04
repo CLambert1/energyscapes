@@ -1,6 +1,6 @@
 #' map_coords
 #'
-#' Description.
+#' Coordinates of the map.
 #'
 #' @format A data frame with 5720 rows and 2 variables:
 #' \describe{

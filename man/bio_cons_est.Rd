@@ -49,16 +49,15 @@ The function first estimates the energyscape (spatialised energetic need of the 
 Allometric relationships are derived from White et al. (2011) with beta parameters from Spitz et al. (2012) for cetaceans; from Ultsch et al. 2013 for loggerhead turtle; from Killen et al. (2016) for fishes and from Shaffer et al. (2011) for seabirds (contrasting Procellariforms and Charadriforms).
 }
 \examples{
-result <- bio_cons_est(predator_group = "Cetacean",
-             predator_name = "TURTRU", 
+result <- bio_cons_est(predator_group = "Procellariform",
+             predator_name = "CALDIO", 
              prey_taxonomic_level = "Taxonomic_group", 
-             prey_group = "Cephalopoda",
+             prey_group = "Teleost",
              diet = diet, 
              assimilation_rate = 0.8,
              n_days = 30+31+31,
              predator_weight = weight, 
              abundance_map = species_abundance, 
-             temperature_map = sst,
-             beta = beta) # not used for fishes and seabirds
+             temperature_map = sst)
 
 }

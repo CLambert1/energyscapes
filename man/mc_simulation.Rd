@@ -52,21 +52,20 @@ Function to run the Monte Carlo simulation for energyscape and biomass estimatio
 }
 \examples{
 # test mc_simulation() with one prey level
-TURTRU_result <- mc_simulation(predator_name = "TURTRU", 
-                               predator_group = "Cetacean",
+CALDIO_result <- mc_simulation(predator_name = "CALDIO", 
+                               predator_group = "Procellariform",
              map_coordinates = map_coords,
              prey_taxonomic_level = "Taxonomic_group", 
-             diet = diet |> subset(Taxonomic_group == "Cephalopoda"), 
+             diet = diet |> subset(Taxonomic_group == "Teleost"), 
              assimilation_rate = 0.8,
              n_days = 30+31+31,
              predator_weight = weight, 
              abundance_map = species_abundance, 
-             temperature_map = sst, # not used for cetaceans and seabirds
-             beta = beta)
+             temperature_map = sst)
 
 # test mc_simulation() with 2 prey levels
-TURTRU_result <- mc_simulation(predator_name = "TURTRU", 
-                               predator_group = "Cetacean",
+CALDIO_result <- mc_simulation(predator_name = "CALDIO", 
+                               predator_group = "Procellariform",
              map_coordinates = map_coords,
              prey_taxonomic_level = "Taxonomic_group", 
              diet = diet, 
@@ -74,14 +73,13 @@ TURTRU_result <- mc_simulation(predator_name = "TURTRU",
              n_days = 30+31+31,
              predator_weight = weight, 
              abundance_map = species_abundance, 
-             temperature_map = sst, # not used for cetaceans and seabirds
-             beta = beta)
+             temperature_map = sst)
 
 # plot results
-ggplot2::ggplot(TURTRU_result$Conso) +
+ggplot2::ggplot(CALDIO_result$Conso) +
     ggplot2::geom_pointrange(ggplot2::aes(y = Prey_category, x = mean, xmin = L10, xmax = U90))
 
-ggplot2::ggplot(TURTRU_result$Energyscape) +
+ggplot2::ggplot(CALDIO_result$Energyscape) +
   ggplot2::geom_tile(ggplot2::aes(x = x, y = y, fill = Energyscape_mean))
 
 

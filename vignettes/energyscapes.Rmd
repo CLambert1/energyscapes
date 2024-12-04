@@ -29,11 +29,10 @@ library(viridis)
 data(list = c("diet", "species_abundance", "sst", "weight", "map_coords", "beta"))
 ```
 
-These data represents the various elements needed for the analyses for the particular case of the bottlenose dolphin in the Mediterranean Sea: the distribution of body mass in the population, the map of abundance, the map of SST (only useful for fish species), the diet composition, the coordinates of the map and the distribution of beta parameter used in the allometric equation. 
+These data represents the various elements needed for the analyses for the particular case of the Scopoli's shearwaters in the Mediterranean Sea: the distribution of body mass in the population, the map of abundance (from Lambert et al 2024 ICES JMS; 10.1093/icesjms/fsae058), the map of SST (only useful for fish species; retrieved from the E.U. Copernicus Marine Service, product ”MEDSEA MULTIYEAR PHY 006 004”, https://doi.org/10.25423/CMCC/MEDSEA MULTIYEAR PHY 006 004 E3R1), the diet composition (from Granadeiro et al 1998 MEPS, 10.3354/meps166267), the coordinates of the map and the distribution of beta parameter used in the allometric equation. 
 
 ```{r example}
 plot(density(weight), main = "Body mass distribution in the population")
-plot(density(beta), main = "cost of living")
 ggplot(species_abundance) + 
   geom_tile(aes(x = x, y = y, fill = mean)) +
   scale_fill_viridis(option = "H")
@@ -49,8 +48,8 @@ From these data, we use the main function of the package (`mc_simulation()`) to 
 
 ```{r mc_simulation}
 # test mc_simulation() with 2 prey levels
-TURTRU_result <- mc_simulation(predator_name = "TURTRU", 
-                               predator_group = "Cetacean",
+CALDIO_result <- mc_simulation(predator_name = "CALDIO", 
+                               predator_group = "Procellariform",
              map_coordinates = map_coords,
              prey_taxonomic_level = "Taxonomic_group", 
              diet = diet, 
@@ -58,9 +57,8 @@ TURTRU_result <- mc_simulation(predator_name = "TURTRU",
              n_days = 30+31+31,
              predator_weight = weight, 
              abundance_map = species_abundance, 
-             temperature_map = sst, # not used for cetaceans and seabirds
-             beta = beta)
-str(TURTRU_result, max.level = 1)
+             temperature_map = sst)
+str(CALDIO_result, max.level = 1)
 ```
 
 This function returns a bunch of objects: 
@@ -73,15 +71,15 @@ All estimated values comes with mean, standard deviation, lower 10% and upper 90
 An example of estimated consumption:
 ```{r plot, echo = FALSE}
 # plot results
-ggplot(TURTRU_result$Conso) +
+ggplot(CALDIO_result$Conso) +
     geom_pointrange(aes(y = Prey_category, x = mean, xmin = L10, xmax = U90)) +
-  labs(title = "Estimated biomass consumption for bottenose dolphins in Med",
+  labs(title = "Estimated biomass consumption for Scopoli's shearwaters in Med",
                 x = "Mean consumption (kg)",
                 y = "Prey category")
 
-ggplot(TURTRU_result$Energyscape) +
+ggplot(CALDIO_result$Energyscape) +
   geom_tile(aes(x = x, y = y, fill = Energyscape_mean))+
-  labs(title = "Estimated energyscape for bottenose dolphins in Med (kJ/d)",
+  labs(title = "Estimated energyscape for Scopoli's shearwaters in Med (kJ/d)",
                 x = "Longitude",
                 y = "Latitude")
 
@@ -92,8 +90,8 @@ The code is automated so that the diet items can be sorted by taxonomy (prey_tax
 I also created a custom color palette to be used for plotting results from the above functions. The palette matches the EcoScope project graphic templates and is ggplot2 friendly (`scale_fill_ecoscope` and `scale_color_ecoscope`). 
 
 ```{r plot2, echo = FALSE}
-TURTRU_result2 <- mc_simulation(predator_name = "TURTRU", 
-                               predator_group = "Cetacean",
+CALDIO_result2 <- mc_simulation(predator_name = "CALDIO", 
+                               predator_group = "Procellariform",
              map_coordinates = map_coords,
              prey_taxonomic_level = "Functional_group", 
              diet = diet, 
@@ -101,15 +99,14 @@ TURTRU_result2 <- mc_simulation(predator_name = "TURTRU",
              n_days = 30+31+31,
              predator_weight = weight, 
              abundance_map = species_abundance, 
-             temperature_map = sst, # not used for cetaceans and seabirds
-             beta = beta)
+             temperature_map = sst)
 
-ggplot(TURTRU_result2$DailyRation) +
+ggplot(CALDIO_result2$DailyRation) +
     geom_pointrange(aes(y = Predator_key, color = Prey_category, 
                         x = mean, xmin = L10, xmax = U90), 
                     position = position_dodge(0.5)) +
   scale_color_ecoscope() +
-  labs(title = "Estimated daily ration for bottenose dolphins in Med",
+  labs(title = "Estimated daily ration for Scopoli's shearwaters in Med",
                 x = "Mean consumption (kg)",
                 y = "Prey category")
 

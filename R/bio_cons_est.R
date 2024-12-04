@@ -28,17 +28,16 @@
 #' @export
 #'
 #' @examples
-#' result <- bio_cons_est(predator_group = "Cetacean",
-#'              predator_name = "TURTRU", 
+#' result <- bio_cons_est(predator_group = "Procellariform",
+#'              predator_name = "CALDIO", 
 #'              prey_taxonomic_level = "Taxonomic_group", 
-#'              prey_group = "Cephalopoda",
+#'              prey_group = "Teleost",
 #'              diet = diet, 
 #'              assimilation_rate = 0.8,
 #'              n_days = 30+31+31,
 #'              predator_weight = weight, 
 #'              abundance_map = species_abundance, 
-#'              temperature_map = sst,
-#'              beta = beta) # not used for fishes and seabirds
+#'              temperature_map = sst)
 #'
 bio_cons_est <- function(predator_group,
                          predator_name,

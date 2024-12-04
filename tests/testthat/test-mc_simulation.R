@@ -11,8 +11,7 @@ test_that("mc_simulation() returns an error when no prey category in the provide
              n_days = 30+31+31,
              predator_weight = weight, 
              abundance_map = species_abundance, 
-             temperature_map = NULL, # not used for cetaceans and seabirds
-             beta = beta),
+             temperature_map = NULL),
     regexp = "No prey categories in Taxonomic_group for TURTRU"
   )
 )

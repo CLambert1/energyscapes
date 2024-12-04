@@ -16,6 +16,6 @@ Source
 weight
 }
 \description{
-Description.
+Weight distribution in Scopoli's shearwater populations.
 }
 \keyword{datasets}
