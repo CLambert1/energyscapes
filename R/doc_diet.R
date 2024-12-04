@@ -1,6 +1,6 @@
 #' diet
 #'
-#' Description.
+#' Scopoli's shearwater diet composition in percentage of wet weight, from Granadeiro et al 1998 MEPS, 10.3354/meps166267.
 #'
 #' @format A data frame with 7 rows and 11 variables:
 #' \describe{
