@@ -29,7 +29,7 @@ library(viridis)
 data(list = c("diet", "species_abundance", "sst", "weight", "map_coords", "beta"))
 ```
 
-These data represents the various elements needed for the analyses for the particular case of the Scopoli's shearwaters in the Mediterranean Sea: the distribution of body mass in the population, the map of abundance (from Lambert et al 2024 ICES JMS; 10.1093/icesjms/fsae058), the map of SST (only useful for fish species; retrieved from the E.U. Copernicus Marine Service, product ”MEDSEA MULTIYEAR PHY 006 004”, https://doi.org/10.25423/CMCC/MEDSEA MULTIYEAR PHY 006 004 E3R1), the diet composition (from Granadeiro et al 1998 MEPS, 10.3354/meps166267), the coordinates of the map and the distribution of beta parameter used in the allometric equation. 
+These data represents the various elements needed for the analyses for the particular case of the Scopoli's shearwaters in the Mediterranean Sea: the distribution of body mass in the population, the map of abundance (from Lambert et al 2024 ICES JMS; 10.1093/icesjms/fsae058), the map of SST (only useful for fish species; retrieved from the E.U. Copernicus Marine Service, product ”MEDSEA MULTIYEAR PHY 006 004”, https://doi.org/10.25423/CMCC/MEDSEA MULTIYEAR PHY 006 004 E3R1), the diet composition (from Granadeiro et al 1998 MEPS, 10.3354/meps166267), the coordinates of the map and the distribution of beta parameter used in the allometric equation (used only for cetaceans and turtles). 
 
 ```{r example}
 plot(density(weight), main = "Body mass distribution in the population")
